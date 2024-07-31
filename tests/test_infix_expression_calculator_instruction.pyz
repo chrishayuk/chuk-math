@@ -2,7 +2,7 @@ import pytest
 import json
 from unittest.mock import patch
 from instructions.infix_expression_calculator_instruction import InfixExpressionCalculatorInstruction
-from lexer.arithmetic_expression import ArithmeticExpression
+from parser.arithmetic_expression import ArithmeticExpression
 
 @pytest.fixture
 def setup_instruction():

@@ -2,7 +2,7 @@ import random
 from decimal import Decimal, InvalidOperation, getcontext
 from math import isfinite
 from instructions.base_instruction import BaseInstruction
-from lexer.arithmetic_expression import ArithmeticExpression
+from parser.arithmetic_expression import ArithmeticExpression
 from sympy import sympify, SympifyError
 
 class InfixExpressionCalculatorInstruction(BaseInstruction):
@@ -12,7 +12,7 @@ class InfixExpressionCalculatorInstruction(BaseInstruction):
 
     def create_instruction(self) -> dict:
         # Generate the explanation (assuming similar logic is implemented)
-        explanation = self.generate_explanation()  # Placeholder for actual explanation generation logic
+        explanation = self.generate_explanation() 
         
         # calculate the results
         result = self.safe_eval(self.convert_tokens_to_eval_format(self.tokens))
