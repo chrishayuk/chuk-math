@@ -20,3 +20,10 @@ class BinaryExpression(Expression):
             "left": self.left.to_dict() if hasattr(self.left, 'to_dict') else str(self.left),
             "right": self.right.to_dict() if hasattr(self.right, 'to_dict') else str(self.right),
         }
+    
+    def __eq__(self, other):
+        if isinstance(other, BinaryExpression):
+            return (self.left == other.left and
+                    self.operator == other.operator and
+                    self.right == other.right)
+        return False

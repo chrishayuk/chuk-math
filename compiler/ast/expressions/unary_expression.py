@@ -5,6 +5,18 @@ class UnaryExpression(Expression):
         self.operator = operator
         self.operand = operand
 
+    def __eq__(self, other):
+        if isinstance(other, UnaryExpression):
+            if self.operator != other.operator:
+                print(f"Operator mismatch: {self.operator} != {other.operator}")
+            if self.operand != other.operand:
+                print(f"Operand mismatch: {self.operand} != {other.operand}")
+            return self.operator == other.operator and self.operand == other.operand
+        return False
+
+    def __repr__(self):
+        return f"UnaryExpression(operator={repr(self.operator)}, operand={repr(self.operand)})"
+
     def to_dict(self):
         # unary expression as a dictionary, handles recursion
         return {

@@ -24,9 +24,9 @@ class Parser:
     def parse(self) -> Optional[ASTNode]:
         """Parse the tokens to create an AST."""
         if not self.tokens:
-            return None  # or raise an appropriate exception
-
+            return None  # Returning None or an appropriate empty value
         return self.parse_expression()
+
 
     def parse_expression(self, precedence=0) -> Optional[ASTNode]:
         """Parse an expression based on the precedence."""
@@ -45,36 +45,29 @@ class Parser:
 
         return left
 
-
     def parse_primary(self) -> ASTNode:
-        """Parse primary expressions, such as literals, unary expressions, and parenthesized expressions."""
         token = self.current_token
 
         if token is None:
-            return None  # Handle empty input gracefully
+            return None
 
-        if token.type == 'NUMBER':
+        if token.type == TokenType.NUMBER:
             self.advance()
-            return Literal(token.value)
-        elif token.type == 'OPERATOR' and token.value == '-':
-            # Handle unary minus
+            return Literal(Decimal(token.value))
+        elif token.type == TokenType.OPERATOR and token.value == '-':
+            # Handle unary minus as a UnaryExpression
             self.advance()
             operand = self.parse_primary()
             return UnaryExpression(operator=token, operand=operand)
-        elif token.type == 'PARENTHESIS' and token.value == '(':
+        elif token.type == TokenType.PARENTHESIS and token.value == '(':
             self.advance()
             expr = self.parse_expression()
-            if not (self.current_token and self.current_token.type == 'PARENTHESIS' and self.current_token.value == ')'):
+            if not (self.current_token and self.current_token.type == TokenType.PARENTHESIS and self.current_token.value == ')'):
                 raise SyntaxError("Expected ')'")
             self.advance()
             return expr
         else:
             raise SyntaxError(f"Unexpected token: {token}")
-
-
-
-
-
 
 
 

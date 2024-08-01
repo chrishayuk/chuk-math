@@ -31,3 +31,8 @@ class Literal(Expression):
                 "type": "LiteralExpression",
                 "value": self.value
             }
+        
+    def __eq__(self, other):
+        if isinstance(other, Literal):
+            return self.value == other.value
+        return False

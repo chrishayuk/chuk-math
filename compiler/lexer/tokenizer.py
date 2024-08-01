@@ -11,19 +11,19 @@ class Tokenizer:
         self.input_string = input_string
         self.current_pos = 0
         self.length = len(input_string)
+        self.tokens = []  # This list will store tokens as they are created
 
     def tokenize(self) -> List[Token]:
-        tokens = []
         while self.current_pos < self.length:
             token = self.get_next_token()
             if token:
-                tokens.append(token)
+                self.tokens.append(token)
             else:
                 self.skip_whitespace()
                 if self.current_pos < self.length:
                     char = self.input_string[self.current_pos]
                     raise TokenizationError(f"Unexpected character: {char} at position {self.current_pos}")
-        return tokens
+        return self.tokens
 
     def get_next_token(self) -> Token:
         self.skip_whitespace()
@@ -44,34 +44,25 @@ class Tokenizer:
         return None
 
     def get_number(self) -> Token:
-        # Only match numbers, minus is handled separately as an operator
         number_match = re.match(r'\d+(\.\d*)?', self.input_string[self.current_pos:])
         if number_match:
             number_str = number_match.group(0)
             self.current_pos += len(number_str)
             try:
                 value = float(number_str)
-                return Token(TokenType.NUMBER, value, self.current_pos - len(number_str))
+                return Token('NUMBER', value, self.current_pos - len(number_str))
             except ValueError:
                 raise TokenizationError(f"Invalid number literal: {number_str}")
         return None
 
-
     def get_operator(self) -> Token:
+        # Handle operators separately, including '-'
         operators = {'+', '-', '*', '/'}
         if self.input_string[self.current_pos] in operators:
             value = self.input_string[self.current_pos]
             self.current_pos += 1
-            
-            # Check if this is a unary minus (i.e., at the start of the expression or after an operator or parenthesis)
-            if value == '-' and (not self.tokens or self.tokens[-1].type in {TokenType.OPERATOR, TokenType.PARENTHESIS}):
-                return Token(TokenType.OPERATOR, value, self.current_pos - 1)
-            
-            # For other operators and binary minus
-            return Token(TokenType.OPERATOR, value, self.current_pos - 1)
+            return Token('OPERATOR', value, self.current_pos - 1)
         return None
-
-
 
     def get_parenthesis(self) -> Token:
         if self.input_string[self.current_pos] in '()':
@@ -86,8 +77,8 @@ class Tokenizer:
             identifier = identifier_match.group(0)
             self.current_pos += len(identifier)
             if self.current_pos < self.length and self.input_string[self.current_pos] == '(':
-                return Token(TokenType.FUNCTION, identifier, self.current_pos - len(identifier))
-            return Token(TokenType.IDENTIFIER, identifier, self.current_pos - len(identifier))
+                return Token('FUNCTION', identifier, self.current_pos - len(identifier))
+            return Token('IDENTIFIER', identifier, self.current_pos - len(identifier))
         return None
 
     def skip_whitespace(self):
