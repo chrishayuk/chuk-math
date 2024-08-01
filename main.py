@@ -1,4 +1,4 @@
-from parser.arithmetic_expression import ArithmeticExpression
+from compiler.parser.arithmetic_expression import ArithmeticExpression
 if __name__ == "__main__":
     # Define the expression to be evaluated
     expression = "3 + 5 * (10 - 4)"
