@@ -20,25 +20,25 @@ if __name__ == "__main__":
     # Optional: Generate instructional outputs
     try:
         # Assuming InfixExpressionCalculatorInstruction expects JSON representation of the AST and the original expression
-        instruction = InfixExpressionCalculatorInstruction(json_ast, expression)
+        instruction = InfixExpressionCalculatorInstruction(json_ast)
 
         # Create the instruction and print different outputs
-        created_instruction = instruction.create_instruction()
+        created_instruction = instruction.emit_instruction()
 
         print("\nInstruction (dictionary format):")
         print(created_instruction)
 
         print("\nInstruction in JSON format:")
-        print(instruction.to_json())
+        print(instruction.emit_json())
 
         print("\nInstruction in JSONL format:")
-        print(instruction.to_jsonl())
+        print(instruction.emit_jsonl())
 
         print("\nInstruction in LLaMA2 format:")
-        print(instruction.to_llama2())
+        print(instruction.emit_llama2())
 
         print("\nInstruction in QA format:")
-        print(instruction.to_qa())
+        print(instruction.emit_qa())
 
     except Exception as e:
         print(f"Error during instruction generation: {e}")

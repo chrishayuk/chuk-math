@@ -1,23 +1,32 @@
+import json
 import random
 from decimal import Decimal, InvalidOperation, getcontext
-from math import isfinite
-from instructions.base_instruction import BaseInstruction
-from compiler.parser.arithmetic_expression import ArithmeticExpression
+from instructions.instruction_emitter import InstructionEmitter
 from sympy import sympify, SympifyError
 
-class InfixExpressionCalculatorInstruction(BaseInstruction):
-    def __init__(self, expression: str, original_expression: str):
-        super().__init__(expression, original_expression)
-        self.expression = original_expression
-
-    def create_instruction(self) -> dict:
-        # Generate the explanation (assuming similar logic is implemented)
-        explanation = self.generate_explanation() 
+class InfixExpressionCalculatorInstruction(InstructionEmitter):
+    def __init__(self, ast: dict):
+        # Ensure ast is a dictionary; if not, attempt to load it as JSON
+        if isinstance(ast, str):
+            ast = json.loads(ast)
         
-        # calculate the results
+        # call the parent constructor
+        super().__init__(ast)
+
+        # set the ast
+        self.ast = ast
+
+        # get the expression
+        self.expression = ast.get('expression', '')  # Safely get 'expression' from ast
+
+    def emit_instruction(self) -> dict:
+        # Generate the explanation
+        explanation = self.generate_explanation()
+        
+        # Calculate the result
         result = self.safe_eval(self.convert_tokens_to_eval_format(self.tokens))
 
-        # return the instruction
+        # Return the instruction
         return {
             "instruction": self.get_random_instruction(),
             "expression": self.expression,
@@ -53,9 +62,11 @@ class InfixExpressionCalculatorInstruction(BaseInstruction):
             lambda: f"Evaluate this: {self.expression} and return the result"
         ]
 
+        # randomly choose a template
         return random.choice(templates)()
 
     def convert_tokens_to_eval_format(self, tokens: list) -> str:
+        # convert tokens for eval
         return ' '.join(str(token['value']) for token in tokens)
 
     def safe_eval(self, expression: str) -> Decimal:

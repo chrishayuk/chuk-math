@@ -1,7 +1,7 @@
 # output_handlers/qa_handler.py
 from typing import Any, Dict
 
-def output_as_qa(instruction: Dict[str, Any]) -> str:
+def emit_qa(instruction: Dict[str, Any]) -> str:
     # set in qa format
     qa = f"QUESTION: {instruction['instruction']}\nANSWER: {instruction['result']}\n"
 
