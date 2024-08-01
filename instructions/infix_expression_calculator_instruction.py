@@ -2,7 +2,7 @@ import random
 from decimal import Decimal, InvalidOperation, getcontext
 from math import isfinite
 from instructions.base_instruction import BaseInstruction
-from parser.arithmetic_expression import ArithmeticExpression
+from compiler.parser.arithmetic_expression import ArithmeticExpression
 from sympy import sympify, SympifyError
 
 class InfixExpressionCalculatorInstruction(BaseInstruction):
