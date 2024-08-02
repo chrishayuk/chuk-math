@@ -3,30 +3,41 @@ from instructions.infix_expression_calculator_instruction import InfixExpression
 
 class ArithmeticCompiler:
     def __init__(self, expression: str):
-        # set the expression
+        # Set the expression
         self.expression = expression
 
-        # set up the arithmetic expression parser
+        # Set up the arithmetic expression parser
         self.arithmetic_expression = ArithmeticExpression(expression)
 
-        # initialize
+        # Initialize
         self.ast = None
         self.json_ast = None
+        self.tokens = None
         self.instruction = None
 
     def parse_expression(self):
         """Parse the expression into an AST and its JSON representation."""
-
-        # parse
-        self.ast = self.arithmetic_expression.parse()
-
-        # get the ast as json
-        self.json_ast = self.arithmetic_expression.ast_as_json()
+        try:
+            # Tokenize and parse the expression
+            self.tokens = self.arithmetic_expression.tokenize()
+            self.ast = self.arithmetic_expression.parse()
+            
+            # Get the AST as JSON
+            self.json_ast = self.arithmetic_expression.ast_as_json()
+        except Exception as e:
+            print(f"Error during parsing: {e}")
+            self.tokens = []
+            self.ast = None
+            self.json_ast = None
 
     def generate_instruction(self):
-        """Generate instruction outputs based on the AST."""
+        """Generate instruction outputs based on the AST and tokens."""
         try:
-            self.instruction = InfixExpressionCalculatorInstruction(self.json_ast)
+            if self.ast and self.tokens:
+                self.instruction = InfixExpressionCalculatorInstruction(self.json_ast, self.tokens)
+            else:
+                print("No AST or tokens available to generate instruction.")
+                self.instruction = None
         except Exception as e:
             print(f"Error during instruction initialization: {e}")
             self.instruction = None

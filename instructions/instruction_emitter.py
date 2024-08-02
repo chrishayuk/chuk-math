@@ -74,10 +74,11 @@ class InstructionEmitter(IInstructionEmitter):
                 return str(ast['value'])
         return None
     
-    def simplify_tokens(self, tokens: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def simplify_tokens(self, tokens: list) -> list:
         """Converts tokens into a simplified representation."""
-        return [{'type': token['type'], 'value': token['value']} for token in tokens]
+        return [{'type': token.type, 'value': token.value} for token in tokens]
 
-    def extract_expression_from_tokens(self, tokens: List[Dict[str, Any]]) -> str:
+
+    def extract_expression_from_tokens(self, tokens: list) -> str:
         """Extracts a string representation from tokens, preserving the original format."""
-        return ' '.join(token['value'] for token in tokens)
+        return ' '.join(str(token.value) for token in tokens)
