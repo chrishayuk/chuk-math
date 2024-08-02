@@ -1,27 +1,63 @@
 from compiler.lexer.tokenizer import Tokenizer, TokenizationError
 from compiler.parser.parser import Parser
+from decimal import Decimal
+import json
+
+from compiler.lexer.tokenizer import Tokenizer, TokenizationError
+from compiler.parser.parser import Parser
+from decimal import Decimal
 import json
 
 class ArithmeticExpression:
     def __init__(self, expression: str):
+        # Set the expression (and strip whitespace)
         self.expression = expression.strip()
+        self.tokens = []
+        self.ast = None
 
     def tokenize(self):
-        tokenizer = Tokenizer(self.expression)
-        return tokenizer.tokenize()
+        """Tokenize the expression and store the tokens."""
+        try:
+            print(f"Tokenizing expression: {self.expression}")  # Debug statement
+            tokenizer = Tokenizer(self.expression)
+            self.tokens = tokenizer.tokenize()
+            print(f"Generated tokens: {self.tokens}")  # Debug statement
+            return self.tokens
+        except TokenizationError as e:
+            print(f"Error tokenizing expression: {e}")  # Debug statement
+            raise ValueError(f"Error tokenizing expression: {e}")
 
     def parse(self):
-        tokens = self.tokenize()
-        parser = Parser(tokens)
-        return parser.parse()
-
-    def parse_as_json(self) -> str:
+        """Parse the expression into an AST and store it."""
         try:
-            tokens = self.tokenize()
-            token_dicts = [
-                {'type': token.type, 'value': token.value, 'position': token.position}
-                for token in tokens
-            ]
-            return json.dumps({"tokens": token_dicts}, indent=2)
-        except Exception as error:
-            raise ValueError(f"Error parsing expression to JSON: {error}")
+            self.tokenize()  # Ensure tokens are available
+            parser = Parser(self.tokens)
+            self.ast = parser.parse()
+            print(f"Generated AST: {self.ast}")  # Debug statement
+            return self.ast
+        except Exception as e:
+            print(f"Error parsing expression: {e}")  # Debug statement
+            raise ValueError(f"Error parsing expression: {e}")
+
+
+    def ast_as_json(self) -> str:
+        """Convert the AST into a JSON representation."""
+        if not self.ast:
+            self.parse()  # Ensure the AST is available
+        try:
+            return json.dumps(self.ast_to_dict(self.ast), indent=2)
+        except Exception as e:
+            raise ValueError(f"Error converting AST to JSON: {e}")
+
+    def ast_to_dict(self, ast_node):
+        """Recursively convert the AST into a dictionary."""
+        if isinstance(ast_node, list):
+            return [self.ast_to_dict(node) for node in ast_node]
+        elif isinstance(ast_node, dict):
+            return {key: self.ast_to_dict(value) for key, value in ast_node.items()}
+        elif isinstance(ast_node, Decimal):
+            return str(ast_node)  # Convert Decimal to string
+        elif hasattr(ast_node, '__dict__'):
+            return {key: self.ast_to_dict(value) for key, value in ast_node.__dict__.items()}
+        else:
+            return ast_node

@@ -5,34 +5,45 @@ from instructions.instruction_emitter import InstructionEmitter
 from sympy import sympify, SympifyError
 
 class InfixExpressionCalculatorInstruction(InstructionEmitter):
-    def __init__(self, ast: dict):
+    def __init__(self, ast: dict, tokens: list = None):
         # Ensure ast is a dictionary; if not, attempt to load it as JSON
         if isinstance(ast, str):
             ast = json.loads(ast)
-        
-        # call the parent constructor
-        super().__init__(ast)
+        super().__init__(ast, tokens or [])
+        self.tokens = tokens or []  # Store tokens
+        print(f"Initialized with tokens: {self.tokens}")  # Debug
 
-        # set the ast
-        self.ast = ast
+    def emit_instruction(self, mode: str = "ast", minimal_parentheses: bool = False) -> dict:
+        if mode == "tokens":
+            return self.emit_instruction_tokens()
+        return self.emit_instruction_ast(minimal_parentheses)
 
-        # get the expression
-        self.expression = ast.get('expression', '')  # Safely get 'expression' from ast
-
-    def emit_instruction(self) -> dict:
-        # Generate the explanation
+    def emit_instruction_ast(self, minimal_parentheses: bool = False) -> dict:
+        self.expression = self.extract_expression_from_ast(self.ast, minimal_parentheses)
         explanation = self.generate_explanation()
-        
-        # Calculate the result
-        result = self.safe_eval(self.convert_tokens_to_eval_format(self.tokens))
+        try:
+            result = self.safe_eval(self.expression)
+            result_str = str(result)  # Convert Decimal to string for JSON serialization
+        except ValueError as error:
+            result_str = str(error)
 
-        # Return the instruction
         return {
             "instruction": self.get_random_instruction(),
             "expression": self.expression,
             "tokens": self.simplify_tokens(self.tokens),
-            "result": str(result),
+            "result": result_str,
             "explanation": explanation
+        }
+
+    def emit_instruction_tokens(self) -> dict:
+        self.expression = self.extract_expression_from_tokens(self.tokens)
+        simplified_tokens = self.simplify_tokens(self.tokens)
+        print(f"Simplified tokens: {simplified_tokens}")  # Debug
+        return {
+            "instruction": f"Tokens representation of the expression: {self.expression}",
+            "tokens": simplified_tokens,
+            "result": "Tokenized form does not include evaluation",
+            "explanation": "Tokens represent the lexical elements of the expression."
         }
 
     def get_random_instruction(self) -> str:
@@ -61,34 +72,20 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
             lambda: f"What result does {self.expression} yield?",
             lambda: f"Evaluate this: {self.expression} and return the result"
         ]
-
-        # randomly choose a template
         return random.choice(templates)()
-
-    def convert_tokens_to_eval_format(self, tokens: list) -> str:
-        # convert tokens for eval
-        return ' '.join(str(token['value']) for token in tokens)
 
     def safe_eval(self, expression: str) -> Decimal:
         try:
-            # Parse and evaluate the expression using sympy
+            print(f"Evaluating expression: {expression}")  # Debug: show the expression to be evaluated
             sympy_expr = sympify(expression)
-            result = sympy_expr.evalf()  # Get the floating-point approximation as a sympy Float
-
-            # Set the precision and rounding context for Decimal
+            if sympy_expr is None:
+                raise ValueError("Invalid expression resulting in None")
+            result = sympy_expr.evalf()
             getcontext().prec = 64
-
-            # Convert the sympy Float result to a string and then to a Decimal
             decimal_result = Decimal(str(result))
-
-            # Normalize the result to remove trailing zeros and round to 4 decimal places
-            decimal_result = decimal_result.quantize(Decimal('1.0000')).normalize()
-
-            return decimal_result
+            return decimal_result.quantize(Decimal('1.0000')).normalize()
         except (SympifyError, InvalidOperation, ValueError) as error:
-            print(f"Error in calculation: {error}")
             raise ValueError(f"Invalid expression or calculation error: {error}")
 
     def generate_explanation(self):
-        # Placeholder for the explanation generation logic
         return "Explanation of the steps taken in solving the expression."
