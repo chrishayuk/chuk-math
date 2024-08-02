@@ -1,4 +1,4 @@
-from output_handlers.qa_handler import output_as_qa
+from instructions.output_emitters.qa_emitter import emit_qa
 
 def test_output_as_qa():
     # instruction
@@ -16,7 +16,7 @@ def test_output_as_qa():
     )
 
     # compare
-    assert output_as_qa(instruction) == expected_output
+    assert emit_qa(instruction) == expected_output
 
 def test_output_as_qa_with_explanation():
     # instruction with explanation
@@ -36,4 +36,4 @@ def test_output_as_qa_with_explanation():
     )
 
     # compare
-    assert output_as_qa(instruction) == expected_output
+    assert emit_qa(instruction) == expected_output

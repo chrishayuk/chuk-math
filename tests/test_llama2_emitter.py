@@ -1,7 +1,6 @@
-import json
-from output_handlers.jsonl_handler import output_as_jsonl
+from instructions.output_emitters.llama2_emitter import emit_llama2
 
-def test_output_as_jsonl():
+def test_output_as_llama2():
     # set the instruction
     instruction = {
         "instruction": "Infix expression calculation",
@@ -11,7 +10,7 @@ def test_output_as_jsonl():
     }
 
     # set the expected output
-    expected_output = json.dumps(instruction) + '\n'
+    expected_output = "<s>[INST]Infix expression calculation[/INST] calculated result</s>\n"
 
     # compare
-    assert output_as_jsonl(instruction) == expected_output
+    assert emit_llama2(instruction) == expected_output

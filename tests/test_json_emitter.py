@@ -1,6 +1,6 @@
 import json
 
-from output_handlers.json_handler import output_as_json
+from instructions.output_emitters.json_emitter import emit_json
 
 def test_output_as_json():
     # set the instruction
@@ -15,4 +15,4 @@ def test_output_as_json():
     expected_output = json.dumps(instruction, indent=2)
 
     # return as json
-    assert output_as_json(instruction) == expected_output
+    assert emit_json(instruction) == expected_output

@@ -18,10 +18,13 @@ class ArithmeticExpression:
     def tokenize(self):
         """Tokenize the expression and store the tokens."""
         try:
-            print(f"Tokenizing expression: {self.expression}")  # Debug statement
+            # setup the tokenizer
             tokenizer = Tokenizer(self.expression)
+
+            # tokenize
             self.tokens = tokenizer.tokenize()
-            print(f"Generated tokens: {self.tokens}")  # Debug statement
+
+            # return the tokens
             return self.tokens
         except TokenizationError as e:
             print(f"Error tokenizing expression: {e}")  # Debug statement
@@ -30,10 +33,15 @@ class ArithmeticExpression:
     def parse(self):
         """Parse the expression into an AST and store it."""
         try:
-            self.tokenize()  # Ensure tokens are available
+            if not self.tokens:
+                # tokenize
+                self.tokenize()
+
+            # parse
             parser = Parser(self.tokens)
             self.ast = parser.parse()
-            print(f"Generated AST: {self.ast}")  # Debug statement
+
+            # return the ast
             return self.ast
         except Exception as e:
             print(f"Error parsing expression: {e}")  # Debug statement
