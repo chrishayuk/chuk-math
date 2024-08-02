@@ -84,9 +84,23 @@ class InstructionEmitter(IInstructionEmitter):
                 return str(ast['value'])
         return ""
 
-    def extract_expression_from_tokens(self, tokens: List[Any]) -> str:
+    def extract_expression_from_tokens(self, tokens: list) -> str:
         """Extracts a string representation from tokens, preserving the original format."""
-        return ' '.join(str(token.value) for token in tokens)
+        expression_parts = []
+
+        # loop the tokens
+        for token in tokens:
+            value = token.value
+            # Remove unnecessary decimals from numbers
+            if isinstance(value, float):
+                value = int(value) if value.is_integer() else value
+            # Add spaces around operators
+            if token.type == "OPERATOR":
+                expression_parts.append(f" {value} ")
+            else:
+                expression_parts.append(str(value))
+        # Join the expression parts
+        return ''.join(expression_parts).replace("( ", "(").replace(" )", ")")
 
     def evaluate_expression(self) -> str:
         """Evaluates the expression and returns the result as a string."""
