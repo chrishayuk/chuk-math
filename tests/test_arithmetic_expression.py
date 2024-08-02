@@ -29,37 +29,35 @@ def test_basic_expression():
 
     assert ast == expected_ast, f"AST mismatch: expected {repr(expected_ast)}, got {repr(ast)}"
 
-
-
 def test_parse_as_json():
     expression = "3 + 5 * (10 - 4)"
     parser = ArithmeticExpression(expression)
     expected_json = {
-        "tokens": [
-            {"type": "NUMBER", "value": 3.0, "position": 0},
-            {"type": "OPERATOR", "value": "+", "position": 2},
-            {"type": "NUMBER", "value": 5.0, "position": 4},
-            {"type": "OPERATOR", "value": "*", "position": 6},
-            {"type": "PARENTHESIS", "value": "(", "position": 8},
-            {"type": "NUMBER", "value": 10.0, "position": 9},
-            {"type": "OPERATOR", "value": "-", "position": 12},
-            {"type": "NUMBER", "value": 4.0, "position": 14},
-            {"type": "PARENTHESIS", "value": ")", "position": 15}
-        ]
+        "left": {"value": "3"},
+        "operator": {"type": "OPERATOR", "value": "+", "position": 2},
+        "right": {
+            "left": {"value": "5"},
+            "operator": {"type": "OPERATOR", "value": "*", "position": 6},
+            "right": {
+                "left": {"value": "10"},
+                "operator": {"type": "OPERATOR", "value": "-", "position": 12},
+                "right": {"value": "4"}
+            }
+        }
     }
-    json_output = parser.parse_as_json()
-    assert json_output == json.dumps(expected_json, indent=2)
+    json_output = parser.ast_as_json()
+    assert json.loads(json_output) == expected_json, f"JSON output mismatch: expected {expected_json}, got {json_output}"
 
 def test_empty_expression():
     expression = ""
     parser = ArithmeticExpression(expression)
     ast = parser.parse()
-    assert ast is None  # Expecting None or a specific empty representation
+    assert ast is None, f"Expected None for empty expression, got {repr(ast)}"
 
 def test_invalid_expression():
     expression = "3 + * 5"
     parser = ArithmeticExpression(expression)
-    with pytest.raises(SyntaxError):  # Adjusted to SyntaxError
+    with pytest.raises(ValueError, match=r"Unexpected token: Token\(type=OPERATOR, value=\*, position=4\)"):
         parser.parse()
 
 def test_unary_minus():
@@ -73,6 +71,3 @@ def test_unary_minus():
     )
 
     assert ast == expected_ast, f"AST mismatch: expected {repr(expected_ast)}, got {repr(ast)}"
-
-
-
