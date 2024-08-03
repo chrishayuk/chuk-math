@@ -95,19 +95,22 @@ class InstructionEmitter(IInstructionEmitter):
         """Extracts a string representation from tokens, preserving the original format."""
         expression_parts = []
 
-        # loop the tokens
+        # loop through the tokens
         for token in tokens:
             value = token.value
             # Remove unnecessary decimals from numbers
             if isinstance(value, float):
                 value = int(value) if value.is_integer() else value
-            # Add spaces around operators
-            if token.type == "OPERATOR":
+            # Add spaces around operators and properly handle parentheses
+            if token.type == "operator":
                 expression_parts.append(f" {value} ")
+            elif token.type == "parenthesis":
+                expression_parts.append(f"{value}")
             else:
                 expression_parts.append(str(value))
-        # Join the expression parts
+        # Join the expression parts and remove any extra spaces around parentheses
         return ''.join(expression_parts).replace("( ", "(").replace(" )", ")")
+
 
     def evaluate_expression(self) -> str:
         """Evaluates the expression and returns the result as a string."""

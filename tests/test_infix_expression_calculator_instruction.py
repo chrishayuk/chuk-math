@@ -38,15 +38,15 @@ def test_to_json(mock_safe_eval, mock_get_instruction, setup_instruction):
         "instruction": "Calculate 3 + 5 * (10 - -4.5) and show the result",
         "expression": "3 + 5 * (10 - -4.5)",
         "tokens": [
-            {"type": "number", "value": 3.0, "position": 0},
-            {"type": "operator", "value": "+", "position": 2},
-            {"type": "number", "value": 5.0, "position": 4},
-            {"type": "operator", "value": "*", "position": 6},
-            {"type": "parenthesis", "value": "(", "position": 8},
-            {"type": "number", "value": 10.0, "position": 9},
-            {"type": "operator", "value": "-", "position": 12},
-            {"type": "number", "value": -4.5, "position": 14},
-            {"type": "parenthesis", "value": ")", "position": 18}
+            {"type": "number", "value": 3.0},
+            {"type": "operator", "value": "+"},
+            {"type": "number", "value": 5.0},
+            {"type": "operator", "value": "*"},
+            {"type": "parenthesis", "value": "("},
+            {"type": "number", "value": 10.0},
+            {"type": "operator", "value": "-"},
+            {"type": "number", "value": -4.5},
+            {"type": "parenthesis", "value": ")"}
         ],
         "result": "75.5",
         "explanation": "This explanation details the steps taken to evaluate the expression."
@@ -61,15 +61,15 @@ def test_to_jsonl(mock_safe_eval, mock_get_instruction, setup_instruction):
         "instruction": "Calculate 3 + 5 * (10 - -4.5) and show the result",
         "expression": "3 + 5 * (10 - -4.5)",
         "tokens": [
-            {"type": "number", "value": 3.0, "position": 0},
-            {"type": "operator", "value": "+", "position": 2},
-            {"type": "number", "value": 5.0, "position": 4},
-            {"type": "operator", "value": "*", "position": 6},
-            {"type": "parenthesis", "value": "(", "position": 8},
-            {"type": "number", "value": 10.0, "position": 9},
-            {"type": "operator", "value": "-", "position": 12},
-            {"type": "number", "value": -4.5, "position": 14},
-            {"type": "parenthesis", "value": ")", "position": 18}
+            {"type": "number", "value": 3.0},
+            {"type": "operator", "value": "+"},
+            {"type": "number", "value": 5.0},
+            {"type": "operator", "value": "*"},
+            {"type": "parenthesis", "value": "("},
+            {"type": "number", "value": 10.0},
+            {"type": "operator", "value": "-"},
+            {"type": "number", "value": -4.5},
+            {"type": "parenthesis", "value": ")"}
         ],
         "result": "75.5",
         "explanation": "This explanation details the steps taken to evaluate the expression."
