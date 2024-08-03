@@ -19,6 +19,9 @@ def main():
     # use ast or tokens
     parser.add_argument("--mode", type=str, choices=["tokens", "ast"], default="ast",
                         help="Choose to use 'tokens' or 'ast' form for output")
+    
+    # specify language model
+    parser.add_argument("--llm", type=str, default=None, help="Specify the name of the language model to use")
 
     # Parse arguments
     args = parser.parse_args()
@@ -30,7 +33,7 @@ def main():
     compiler.parse_expression()
 
     # Generate instructions
-    compiler.generate_instruction()
+    compiler.generate_instruction(args.llm)
 
     # Emit output based on the requested format and mode
     if compiler.instruction:

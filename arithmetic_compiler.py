@@ -30,19 +30,20 @@ class ArithmeticCompiler:
             self.ast = None
             self.json_ast = None
 
-    def generate_instruction(self):
+    def generate_instruction(self, llm: str):
         """Generate instruction outputs based on the AST and tokens."""
         try:
             # ensure we have an ast or tokens
             if self.ast and self.tokens:
                 # set the instruction
-                self.instruction = InfixExpressionCalculatorInstruction(self.json_ast, self.tokens)
+                self.instruction = InfixExpressionCalculatorInstruction(self.json_ast, self.tokens, llm=llm)
             else:
                 print("No AST or tokens available to generate instruction.")
                 self.instruction = None
         except Exception as e:
             print(f"Error during instruction initialization: {e}")
             self.instruction = None
+
 
     def compile(self):
         """Full compilation process: parse, generate instructions, and emit outputs."""

@@ -5,6 +5,7 @@ from instructions.output_emitters.json_emitter import emit_json
 from instructions.output_emitters.jsonl_emitter import emit_jsonl
 from instructions.output_emitters.llama2_emitter import emit_llama2
 from instructions.output_emitters.qa_emitter import emit_qa
+from langchain_ollama.llms import OllamaLLM
 
 class IInstructionEmitter(ABC):
     @abstractmethod
@@ -12,9 +13,15 @@ class IInstructionEmitter(ABC):
         pass
 
 class InstructionEmitter(IInstructionEmitter):
-    def __init__(self, ast: Dict[str, Any] = None, tokens: List[Any] = None):
+    def __init__(self, ast: Dict[str, Any] = None, tokens: List[Any] = None, llm: str = None):
         self.ast = ast
         self.tokens = tokens or []
+        
+        # Set up the LLM client using LangChain
+        if llm:
+            self.llm = OllamaLLM(model=llm)
+        else:
+            self.llm = None
 
     def emit_instruction(self, minimal_parentheses: bool = False) -> Dict[str, Any]:
         if self.tokens:
@@ -37,7 +44,7 @@ class InstructionEmitter(IInstructionEmitter):
 
         # return the instruction
         return {
-            "instruction": self.get_random_instruction(),
+            "instruction": self.get_random_instruction(True),
             "expression": self.expression,
             "tokens": simplified_tokens,
             "result": result_str,
