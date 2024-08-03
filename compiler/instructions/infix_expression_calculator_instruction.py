@@ -6,6 +6,9 @@ from sympy import sympify, SympifyError
 from langchain_core.output_parsers import StrOutputParser
 from langchain.prompts import PromptTemplate
 from compiler.instructions.instruction_emitter import InstructionEmitter
+from explanations.expression_explanation_generator import ExpressionExplanationGenerator
+from explanations.expression_node import ExpressionNode
+from explanations.expression_tree import ExpressionTree
 
 class InfixExpressionCalculatorInstruction(InstructionEmitter):
     def __init__(self, ast: dict, tokens: list = None, llm: str = None):
@@ -104,4 +107,37 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
             raise ValueError(f"Invalid expression or calculation error: {error}")
 
     def generate_explanation(self):
-        return "This explanation details the steps taken to evaluate the expression."
+        """Generate an explanation for the evaluated expression."""
+        # Convert AST to ExpressionTree
+        tree = self.ast_to_expression_tree(self.ast)
+
+        # Generate explanation
+        explanation_generator = ExpressionExplanationGenerator(tree.root)
+        explanation_text, result = explanation_generator.generate_explanation(0)
+
+        return explanation_text
+
+    def ast_to_expression_tree(self, ast_node) -> ExpressionTree:
+        """Converts an AST to an ExpressionTree."""
+        if not ast_node:
+            return None
+
+        def build_expression_node(node):
+            if 'operator' in node:
+                return ExpressionNode(
+                    value=node['operator']['value'],
+                    left=build_expression_node(node['left']),
+                    right=build_expression_node(node['right'])
+                )
+            elif 'value' in node:
+                return ExpressionNode(value=node['value'])
+            return None
+        
+        # create the expression treee
+        expression_tree = ExpressionTree()
+
+        # set the root
+        expression_tree.root = build_expression_node(ast_node)
+
+        # return the expression tree
+        return expression_tree

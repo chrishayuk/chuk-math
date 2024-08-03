@@ -50,8 +50,17 @@ class ArithmeticCompiler:
 
     def compile(self):
         """Full compilation process: parse, generate instructions, and emit outputs."""
-        # parse the expression
+        # Parse the expression
         self.parse_expression()
 
-        # generate the instruction
-        self.generate_instruction()
+        # Generate the instruction
+        self.generate_instruction(None)  # Assuming no specific LLM provided
+
+        # Generate instruction using the instruction object
+        if self.instruction:
+            instruction_output = self.instruction.emit_instruction()
+        else:
+            instruction_output = {}
+
+        print("Instruction:")
+        print(instruction_output)
