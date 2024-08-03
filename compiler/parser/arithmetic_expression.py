@@ -67,9 +67,9 @@ class ArithmeticExpression:
         elif isinstance(ast_node, Decimal):
             return str(ast_node)  # Convert Decimal to string
         elif isinstance(ast_node, Token):
-            # Special handling for Token instances
+            # Handle Token instances
             return {
-                "type": "Operator",
+                "type": ast_node.type,  # Use the token type
                 "value": ast_node.value,
                 "position": ast_node.position
             }
@@ -79,3 +79,4 @@ class ArithmeticExpression:
             return node_dict
         else:
             return ast_node
+
