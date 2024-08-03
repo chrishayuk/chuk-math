@@ -1,8 +1,8 @@
 import random
-from utilities.random_number_generator import generate_random_number
-from utilities.random_operator_generator import generate_random_operator
+from expression_generator.utilities.random_number_generator import generate_random_number
+from expression_generator.utilities.random_operator_generator import generate_random_operator
 
-class ExpressionGenerator:
+class ArithmeticExpressionGenerator:
     def __init__(self):
         pass
 
@@ -91,12 +91,3 @@ class ExpressionGenerator:
 
         # return the expression
         return expression
-
-
-# Example usage
-if __name__ == "__main__":
-    # setup the generator
-    eg = ExpressionGenerator()
-
-    # generate some random expressions
-    print(eg.generate_random_expression("very easy"))
