@@ -42,6 +42,7 @@ class InstructionEmitter(IInstructionEmitter):
             "instruction": self.get_random_instruction(True),
             "expression": self.expression,
             "tokens": simplified_tokens,
+            "ast": self.ast,
             "result": result_str,
             "explanation": explanation
         }
