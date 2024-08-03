@@ -69,6 +69,13 @@ python tokenizer_cli.py "379 * 85"
 ```
 
 ### Compiler CLI
+The following shows how to use the arithmetic compiler cl.  The compiler cli, accepts a math expression (one that has been generated from the expression generator), runs it through the tokenizer (similar to the tokenizer cli), and then runs the tokenized version of the expression through the parser to generate an Abstract Syntax Tree (AST).  From the abstract syntax tree, the compiler will generate a natural language instruction from a range of options in a template list, for the specified instruction.  In the example below the compiler cli will use the default infix_expression_calculator_instruction.
+
+```bash
+python main.py "3 + 5 * (10 - 4)"
+```
+
+#### using an llm
 
 ```bash
 python main.py "3 + 5 * (10 - 4)" --llm "mistral-nemo"

@@ -55,14 +55,3 @@ class ArithmeticCompiler:
 
         # generate the instruction
         self.generate_instruction()
-
-if __name__ == "__main__":
-    # set an expression
-    expression = "3 + 5 * (10 - 4)"
-
-    # compile
-    compiler = ArithmeticCompiler(expression)
-    compiler.compile()
-
-    # print
-    print(compiler.ast)
