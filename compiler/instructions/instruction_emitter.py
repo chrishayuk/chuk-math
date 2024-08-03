@@ -9,29 +9,24 @@ from compiler.instructions.output_emitters.qa_emitter import emit_qa
 
 class IInstructionEmitter(ABC):
     @abstractmethod
-    def emit_instruction(self, minimal_parentheses: bool = False) -> Dict[str, Any]:
+    def emit_instruction(self) -> Dict[str, Any]:
         pass
 
 class InstructionEmitter(IInstructionEmitter):
     def __init__(self, ast: Dict[str, Any] = None, tokens: List[Any] = None, llm: str = None):
         self.ast = ast
         self.tokens = tokens or []
-        
+        self.expression = ""  # Ensure this is set
+
         # Set up the LLM client using LangChain
         if llm:
             self.llm = OllamaLLM(model=llm)
         else:
             self.llm = None
 
-    def emit_instruction(self, minimal_parentheses: bool = False) -> Dict[str, Any]:
-        if self.tokens:
-            # extract the expression from tokens
-            self.expression = self.extract_expression_from_tokens(self.tokens)
-        elif self.ast:
-            # extract the expression from the ast
-            self.expression = self.extract_expression_from_ast(self.ast)
-        else:
-            self.expression = ""
+    def emit_instruction(self) -> Dict[str, Any]:
+        # extract the expression from the ast
+        self.expression = self.extract_expression_from_ast(self.ast)
 
         # simplify the tokens
         simplified_tokens = self.simplify_tokens(self.tokens)
@@ -72,45 +67,47 @@ class InstructionEmitter(IInstructionEmitter):
         return emit_qa(self.emit_instruction())
 
     def extract_expression_from_ast(self, ast) -> str:
-        """Extracts a string representation of the expression from the AST."""
+        """Extracts a string representation of the expression from the AST with minimal parentheses."""
         if isinstance(ast, dict):
             if 'operator' in ast:
-                # get the left hand of the expression
+                # Recursively get the left and right parts of the expression
                 left = self.extract_expression_from_ast(ast.get('left'))
-
-                # get the operator
                 operator = ast['operator']['value']
-
-                # get the right hand of the expression
                 right = self.extract_expression_from_ast(ast.get('right'))
                 
-                # return left operator right
-                return f"({left} {operator} {right})"
+                # Determine if parentheses are needed
+                left_needs_paren = self._needs_parentheses(ast.get('left'), ast['operator']['value'])
+                right_needs_paren = self._needs_parentheses(ast.get('right'), ast['operator']['value'])
+
+                # Return the expression with necessary parentheses
+                return f"{'(' if left_needs_paren else ''}{left}{')' if left_needs_paren else ''} {operator} {'(' if right_needs_paren else ''}{right}{')' if right_needs_paren else ''}"
             elif 'value' in ast:
-                # return the value
-                return str(ast['value'])
+                value = ast['value']
+                # Convert the value to a string without unnecessary decimal places
+                if isinstance(value, float) and value.is_integer():
+                    value = int(value)
+                return str(value)
         return ""
 
-    def extract_expression_from_tokens(self, tokens: list) -> str:
-        """Extracts a string representation from tokens, preserving the original format."""
-        expression_parts = []
 
-        # loop through the tokens
-        for token in tokens:
-            value = token.value
-            # Remove unnecessary decimals from numbers
-            if isinstance(value, float):
-                value = int(value) if value.is_integer() else value
-            # Add spaces around operators and properly handle parentheses
-            if token.type == "operator":
-                expression_parts.append(f" {value} ")
-            elif token.type == "parenthesis":
-                expression_parts.append(f"{value}")
-            else:
-                expression_parts.append(str(value))
-        # Join the expression parts and remove any extra spaces around parentheses
-        return ''.join(expression_parts).replace("( ", "(").replace(" )", ")")
+    def _needs_parentheses(self, sub_ast, parent_op) -> bool:
+        """Determines if the sub-expression needs parentheses based on the parent operator."""
+        if not sub_ast or not isinstance(sub_ast, dict):
+            return False
+        if 'operator' not in sub_ast:
+            return False
 
+        child_op = sub_ast['operator']['value']
+
+        # Define precedence rules
+        precedence = {
+            '+': 1, '-': 1,
+            '*': 2, '/': 2,
+            '^': 3
+        }
+        
+        # Check if child operator has lower precedence than parent operator
+        return precedence.get(child_op, 0) < precedence.get(parent_op, 0)
 
     def evaluate_expression(self) -> str:
         """Evaluates the expression and returns the result as a string."""
