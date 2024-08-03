@@ -1,5 +1,6 @@
 from compiler.lexer.tokenizer import Tokenizer, TokenizationError
 from compiler.parser.parser import Parser
+from compiler.lexer.tokenizer import Token
 from decimal import Decimal
 import json
 
@@ -65,7 +66,16 @@ class ArithmeticExpression:
             return {key: self.ast_to_dict(value) for key, value in ast_node.items()}
         elif isinstance(ast_node, Decimal):
             return str(ast_node)  # Convert Decimal to string
+        elif isinstance(ast_node, Token):
+            # Special handling for Token instances
+            return {
+                "type": "Operator",
+                "value": ast_node.value,
+                "position": ast_node.position
+            }
         elif hasattr(ast_node, '__dict__'):
-            return {key: self.ast_to_dict(value) for key, value in ast_node.__dict__.items()}
+            node_dict = {key: self.ast_to_dict(value) for key, value in ast_node.__dict__.items()}
+            node_dict['type'] = ast_node.__class__.__name__  # Use 'type' instead of '__class__'
+            return node_dict
         else:
             return ast_node
