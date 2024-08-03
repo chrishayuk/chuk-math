@@ -99,4 +99,4 @@ if __name__ == "__main__":
     eg = ExpressionGenerator()
 
     # generate some random expressions
-    print(eg.generate_random_expression("easy"))
+    print(eg.generate_random_expression("very easy"))

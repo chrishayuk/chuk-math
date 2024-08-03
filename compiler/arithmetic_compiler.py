@@ -1,5 +1,5 @@
 from compiler.parser.arithmetic_expression import ArithmeticExpression
-from instructions.infix_expression_calculator_instruction import InfixExpressionCalculatorInstruction
+from compiler.instructions.infix_expression_calculator_instruction import InfixExpressionCalculatorInstruction
 
 class ArithmeticCompiler:
     def __init__(self, expression: str):
@@ -14,6 +14,7 @@ class ArithmeticCompiler:
         self.json_ast = None
         self.tokens = None
         self.instruction = None
+        
 
     def parse_expression(self):
         """Parse the expression into an AST and its JSON representation."""

@@ -1,5 +1,5 @@
 import json
-from instructions.output_emitters.jsonl_emitter import emit_jsonl
+from compiler.instructions.output_emitters.jsonl_emitter import emit_jsonl
 
 def test_output_as_jsonl():
     # set the instruction

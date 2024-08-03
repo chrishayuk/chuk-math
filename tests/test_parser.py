@@ -1,4 +1,3 @@
-import pytest
 from compiler.lexer.tokenizer import Tokenizer
 from compiler.parser.parser import Parser
 from compiler.ast.expressions.literal_expression import Literal

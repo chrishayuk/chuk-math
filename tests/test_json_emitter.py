@@ -1,6 +1,5 @@
 import json
-
-from instructions.output_emitters.json_emitter import emit_json
+from compiler.instructions.output_emitters.json_emitter import emit_json
 
 def test_output_as_json():
     # set the instruction

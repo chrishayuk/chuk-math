@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 from decimal import Decimal
 from typing import Any, Dict, List
-from instructions.output_emitters.json_emitter import emit_json
-from instructions.output_emitters.jsonl_emitter import emit_jsonl
-from instructions.output_emitters.llama2_emitter import emit_llama2
-from instructions.output_emitters.qa_emitter import emit_qa
 from langchain_ollama.llms import OllamaLLM
+from compiler.instructions.output_emitters.json_emitter import emit_json
+from compiler.instructions.output_emitters.jsonl_emitter import emit_jsonl
+from compiler.instructions.output_emitters.llama2_emitter import emit_llama2
+from compiler.instructions.output_emitters.qa_emitter import emit_qa
 
 class IInstructionEmitter(ABC):
     @abstractmethod

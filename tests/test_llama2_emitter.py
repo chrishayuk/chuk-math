@@ -1,4 +1,4 @@
-from instructions.output_emitters.llama2_emitter import emit_llama2
+from compiler.instructions.output_emitters.llama2_emitter import emit_llama2
 
 def test_output_as_llama2():
     # set the instruction

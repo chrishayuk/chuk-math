@@ -1,6 +1,6 @@
 import argparse
-from arithmetic_compiler import ArithmeticCompiler
-from instructions.infix_expression_calculator_instruction import InfixExpressionCalculatorInstruction
+from compiler.arithmetic_compiler import ArithmeticCompiler
+from compiler.instructions.infix_expression_calculator_instruction import InfixExpressionCalculatorInstruction
 
 def main():
     # Set up argument parser

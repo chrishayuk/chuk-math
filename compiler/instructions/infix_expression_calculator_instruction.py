@@ -1,10 +1,10 @@
 import json
 import random
 from decimal import Decimal, InvalidOperation, getcontext
-from instructions.instruction_emitter import InstructionEmitter
 from sympy import sympify, SympifyError
 from langchain_core.output_parsers import StrOutputParser
 from langchain.prompts import PromptTemplate
+from compiler.instructions.instruction_emitter import InstructionEmitter
 
 class InfixExpressionCalculatorInstruction(InstructionEmitter):
     def __init__(self, ast: dict, tokens: list = None, llm: str = None):

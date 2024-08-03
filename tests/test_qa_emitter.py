@@ -1,4 +1,4 @@
-from instructions.output_emitters.qa_emitter import emit_qa
+from compiler.instructions.output_emitters.qa_emitter import emit_qa
 
 def test_output_as_qa():
     # instruction
