@@ -1,6 +1,7 @@
 import json
 import random
 from decimal import Decimal, InvalidOperation, getcontext
+from langchain_ollama import OllamaLLM
 from sympy import sympify, SympifyError
 from langchain_core.output_parsers import StrOutputParser
 from langchain.prompts import PromptTemplate
@@ -13,7 +14,7 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
             ast = json.loads(ast)
 
         # Call the parent constructor
-        super().__init__(ast, tokens or [])
+        super().__init__(ast, tokens or [], llm)
 
         # Set the tokens
         self.tokens = tokens or []

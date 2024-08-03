@@ -1,3 +1,4 @@
+from compiler.instructions.math_problem_instruction import MATHProblemInstruction
 from compiler.parser.arithmetic_expression import ArithmeticExpression
 from compiler.instructions.infix_expression_calculator_instruction import InfixExpressionCalculatorInstruction
 
@@ -38,6 +39,7 @@ class ArithmeticCompiler:
             if self.ast and self.tokens:
                 # set the instruction
                 self.instruction = InfixExpressionCalculatorInstruction(self.json_ast, self.tokens, llm=llm)
+                #self.instruction = MATHProblemInstruction(self.json_ast, self.tokens, llm=llm)
             else:
                 print("No AST or tokens available to generate instruction.")
                 self.instruction = None
