@@ -15,10 +15,6 @@ def main():
     
     # the instruction we want to generate
     parser.add_argument("--instruction", type=str, help="Specific instruction to generate")
-
-    # use ast or tokens
-    parser.add_argument("--mode", type=str, choices=["tokens", "ast"], default="ast",
-                        help="Choose to use 'tokens' or 'ast' form for output")
     
     # specify language model
     parser.add_argument("--llm", type=str, default=None, help="Specify the name of the language model to use")
