@@ -27,43 +27,42 @@ class InstructionEmitter(IInstructionEmitter):
             self.llm = None
 
     def emit_instruction(self) -> Dict[str, Any]:
-        # extract the expression from the ast
+        # Extract the expression from the ast
         self.expression = self.extract_expression_from_ast(self.ast)
 
-        # simplify the tokens
+        # Simplify the tokens
         simplified_tokens = self.simplify_tokens(self.tokens)
 
-        # get the question
-        question = self.get_random_instruction(True)
+        # Get the question
+        question = self.get_random_instruction()
 
-        # evaluate the expression
+        # Evaluate the expression
         answer = self.evaluate_expression()
 
-        # generate the explanation
+        # Generate the explanation
         explanation = self.generate_explanation()
 
         # Generate LLM responses only if an LLM is provided
-        pretty_result = self.get_pretty_result(question, answer) if self.llm else None
-        step_by_step_result = self.get_step_by_step_explanation(question, answer, explanation) if self.llm else None
+        if self.llm:
+            pretty_result = self.get_pretty_result(question, answer)
+            step_by_step_result = self.get_step_by_step_explanation(question, answer, explanation)
+        else:
+            pretty_result = step_by_step_result = None
 
-
-         # Initialize the instruction dictionary
+        # Initialize the instruction dictionary
         instruction = {
             "instruction": question,
             "expression": self.expression,
             "tokens": simplified_tokens,
             "ast": self.ast,
             "result": answer,
-            "explanation": explanation
+            "explanation": explanation,
+            "llm_pretty_result": pretty_result,
+            "llm_step_by_step_result": step_by_step_result
         }
 
-        # Include LLM responses only if an LLM is provided
-        if self.llm:
-            instruction["llm_pretty_result"] = self.get_pretty_result(question, answer)
-            instruction["llm_step_by_step_result"] = self.get_step_by_step_explanation(question, answer, explanation)
-
-        # return the instruction
         return instruction
+
     
 
     def simplify_tokens(self, tokens: List[Any]) -> List[Dict[str, Any]]:
@@ -143,14 +142,14 @@ class InstructionEmitter(IInstructionEmitter):
         
     def get_pretty_result(self, question, answer):
         """Generate a natural language response using the question and answer."""
-        response_template = """For the provided expression "{expression}", the result is "{answer}" for the question: {question}.  Now create a highly readable version of the answer, keep it simple.  Just provide the answer response, no premable."""
+        response_template = """For the question "{question}" and it's associated expression "{expression}", the result is "{answer}".  Now create a highly readable version of the answer, keep it simple, not LATEX.  Just provide the answer response, no premable, do not change the values for the question or expression."""
         
         # call the llm
         return self.get_llm_response(response_template.format(expression=self.expression, answer=answer, question=question))
 
     def get_step_by_step_explanation(self, question, answer, explanation) -> str:
         """Generate a step-by-step explanation using the explanation."""
-        response_template = """For the provided expression: "{expression}", the result is: "{answer}" for the question: {question}.  The following is the step by step explanation: {explanation}.  Now create a highly readable version of the answer, with a highly readable step by step explanation, using the provided explanation.  Just provide the answer response, no premable.  Provide the step by step analysis before providing the answer"""
+        response_template = """or the question "{question}" and it's associated expression "{expression}", the result is "{answer}.  The following is the step by step explanation: {explanation}.  Now create a highly readable version of the answer, with a highly readable step by step explanation, using the provided explanation, keep it simple, not LATEX.  Just provide the answer response, no premable.  Provide the step by step analysis before providing the answer"""
 
         # call the llm
         return self.get_llm_response(response_template.format(expression=self.expression, answer=answer, question=question, explanation=explanation))
