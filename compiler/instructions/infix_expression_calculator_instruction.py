@@ -54,6 +54,9 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
             lambda: f"Evaluate this: {self.expression} and return the result",
         ]
 
+        # Shuffle templates to increase randomness
+        random.shuffle(templates)   
+
         # get a random template
         template = random.choice(templates)()
 
