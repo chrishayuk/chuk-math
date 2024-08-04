@@ -86,6 +86,7 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
             return response
         except Exception as e:
             return f"Error generating instruction from LLM: {e}"
+        
 
     def safe_eval(self, expression: str) -> Decimal:
         try:

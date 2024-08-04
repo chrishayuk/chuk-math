@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from decimal import Decimal
 from typing import Any, Dict, List
 from langchain_ollama.llms import OllamaLLM
+from langchain_core.output_parsers import StrOutputParser
+from langchain.prompts import PromptTemplate
 from compiler.instructions.output_emitters.json_emitter import emit_json
 from compiler.instructions.output_emitters.jsonl_emitter import emit_jsonl
 from compiler.instructions.output_emitters.llama2_emitter import emit_llama2
@@ -31,21 +33,38 @@ class InstructionEmitter(IInstructionEmitter):
         # simplify the tokens
         simplified_tokens = self.simplify_tokens(self.tokens)
 
+        # get the question
+        question = self.get_random_instruction(True)
+
+        # evaluate the expression
+        answer = self.evaluate_expression()
+
         # generate the explanation
         explanation = self.generate_explanation()
 
-        # evaluate the expression
-        result_str = self.evaluate_expression()
+        # Generate LLM responses only if an LLM is provided
+        pretty_result = self.get_pretty_result(question, answer) if self.llm else None
+        step_by_step_result = self.get_step_by_step_explanation(question, answer, explanation) if self.llm else None
 
-        # return the instruction
-        return {
-            "instruction": self.get_random_instruction(True),
+
+         # Initialize the instruction dictionary
+        instruction = {
+            "instruction": question,
             "expression": self.expression,
             "tokens": simplified_tokens,
             "ast": self.ast,
-            "result": result_str,
+            "result": answer,
             "explanation": explanation
         }
+
+        # Include LLM responses only if an LLM is provided
+        if self.llm:
+            instruction["llm_pretty_result"] = self.get_pretty_result(question, answer)
+            instruction["llm_step_by_step_result"] = self.get_step_by_step_explanation(question, answer, explanation)
+
+        # return the instruction
+        return instruction
+    
 
     def simplify_tokens(self, tokens: List[Any]) -> List[Dict[str, Any]]:
         """Converts tokens into a simplified representation."""
@@ -121,3 +140,33 @@ class InstructionEmitter(IInstructionEmitter):
         except ValueError as error:
             # return the result
             return str(error)
+        
+    def get_pretty_result(self, question, answer):
+        """Generate a natural language response using the question and answer."""
+        response_template = """For the provided expression "{expression}", the result is "{answer}" for the question: {question}.  Now create a highly readable version of the answer, keep it simple.  Just provide the answer response, no premable."""
+        
+        # call the llm
+        return self.get_llm_response(response_template.format(expression=self.expression, answer=answer, question=question))
+
+    def get_step_by_step_explanation(self, question, answer, explanation) -> str:
+        """Generate a step-by-step explanation using the explanation."""
+        response_template = """For the provided expression: "{expression}", the result is: "{answer}" for the question: {question}.  The following is the step by step explanation: {explanation}.  Now create a highly readable version of the answer, with a highly readable step by step explanation, using the provided explanation.  Just provide the answer response, no premable.  Provide the step by step analysis before providing the answer"""
+
+        # call the llm
+        return self.get_llm_response(response_template.format(expression=self.expression, answer=answer, question=question, explanation=explanation))
+    
+    def get_llm_response(self, input_text: str) -> str:
+        """Get a response from the LLM."""
+        if self.llm:
+            try:
+                # Setup the prompt and chain
+                prompt = PromptTemplate(input_variables=["input_text"], template="{input_text}")
+                chain = prompt | self.llm | StrOutputParser()
+
+                # Execute the chain
+                response = chain.invoke({"input_text": input_text})
+                return response
+            except Exception as e:
+                return f"Error generating response from LLM: {e}"
+        else:
+            return input_text  # Fallback to input if LLM is not available
