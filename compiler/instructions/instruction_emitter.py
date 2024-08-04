@@ -149,7 +149,7 @@ class InstructionEmitter(IInstructionEmitter):
 
     def get_step_by_step_explanation(self, question, answer, explanation) -> str:
         """Generate a step-by-step explanation using the explanation."""
-        response_template = """or the question "{question}" and it's associated expression "{expression}", the result is "{answer}.  The following is the step by step explanation: {explanation}.  Now create a highly readable version of the answer, with a highly readable step by step explanation, using the provided explanation, keep it simple, not LATEX.  Just provide the answer response, no premable.  Provide the step by step analysis before providing the answer"""
+        response_template = """For the question "{question}" and it's associated expression "{expression}", the result is "{answer}.  The following is the step by step explanation: {explanation}.  Now create a highly readable version of the answer, with a highly readable step by step explanation, using the provided explanation, keep it simple, not LATEX.  Just provide the answer response, no premable.  Provide the step by step analysis before providing the answer"""
 
         # call the llm
         return self.get_llm_response(response_template.format(expression=self.expression, answer=answer, question=question, explanation=explanation))
