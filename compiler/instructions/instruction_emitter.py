@@ -142,14 +142,15 @@ class InstructionEmitter(IInstructionEmitter):
         
     def get_pretty_result(self, question, answer):
         """Generate a natural language response using the question and answer."""
-        response_template = """For the question "{question}" and it's associated expression "{expression}", the result is "{answer}".  Now create a highly readable version of the answer, keep it simple, not LATEX.  Just provide the answer response, no premable, do not change the values for the question or expression."""
+        response_template = """For the question "{question}" and it's associated expression "{expression}", the result is "{answer}".  Now create a highly readable version of the answer, keep it simple, not LATEX.  Just provide the answer response, no premable, do not change the values for the question or expression.  do not change parenthesis for the expression"""
         
         # call the llm
         return self.get_llm_response(response_template.format(expression=self.expression, answer=answer, question=question))
 
     def get_step_by_step_explanation(self, question, answer, explanation) -> str:
         """Generate a step-by-step explanation using the explanation."""
-        response_template = """For the question "{question}" and it's associated expression "{expression}", the result is "{answer}.  The following is the step by step explanation: {explanation}.  Now create a highly readable version of the answer, with a highly readable step by step explanation, using the provided explanation, keep it simple, not LATEX.  Just provide the answer response, no premable.  Provide the step by step analysis before providing the answer"""
+        #response_template = """For the question "{question}" and it's associated expression "{expression}", the result is "{answer}.  The following is the step by step explanation: {explanation}.  Now create a highly readable version of the answer, with a highly readable step by step explanation, using the provided explanation, keep it simple, not LATEX.  Just provide the answer response, no premable.  Provide the step by step analysis before providing the answer"""
+        response_template = """For the question "{question}" and it's associated expression "{expression}", the result is "{answer}.  The following is the step by step explanation: {explanation}.  Now create a highly readable version of the answer, with a highly readable step by step explanation, using the provided explanation, keep it simple, not LATEX.  Provide the step by step analysis before providing the answer.  Enclose the Reasoning (step by step explanation) within <think></think> tags, ensure you repeat and include the question within the think tags also i.e. <think>question then reasoning here</think>.   The final answer which is outputted to the user as a pretty response should be outputted within answer tags <answer>answer goes here</answer>"""
 
         # call the llm
         return self.get_llm_response(response_template.format(expression=self.expression, answer=answer, question=question, explanation=explanation))

@@ -71,7 +71,7 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
     def get_instruction_from_llm(self, question: str) -> str:
         # prompt template
         prompt_template = """Generate a question for the following mathematical expression: {expression}.  
-            Ensure it's accurate, do not miss any values.  Ensure random
+            Ensure it's accurate, do not miss any values.  Do NOT change parenthesis in the expression.  Ensure random
             Example: {question}
             Question: """
 
