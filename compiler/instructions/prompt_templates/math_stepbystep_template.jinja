@@ -1,13 +1,23 @@
-{# Template for generating a structured response with reasoning and verification #}
+{# Enhanced Template for Generating Clear Explanations and Verifications #}
 
-For the question "{{ question }}" with the expression "{{ expression }}", the result is "{{ answer }}". Using the provided explanation "{{ explanation }}", rewrite this as a clear and highly readable step-by-step explanation. 
+For the problem "{{ question }}", involving the expression "{{ expression }}", produce a clear, step-by-step explanation of how the result "{{ answer }}" was derived. If any discrepancies are identified, re-calculate and provide the correct steps without referencing prior mistakes or external explanations.
 
-1. Begin by restating the question within `<think>` tags.
-2. Clearly state the steps used to solve the problem, referencing key concepts like PEMDAS (Parentheses, Exponents, Multiplication/Division, Addition/Subtraction) or other relevant mathematical rules.
-3. Present the final answer inside `<answer>` tags as a concise and polished response.
-4. Include a separate `<verifier_answer>` section that contains only the result for verification purposes, without any preamble.
+Restate the problem clearly using <think> tags.
+Break down the solution into intuitive, logically ordered steps, ensuring all calculations follow proper mathematical principles (e.g., PEMDAS for arithmetic). Use plain language and avoid unnecessary technical jargon.
+Conclude the reasoning with the final answer inside <answer> tags.
+Include a <verifier_answer> section containing only the result, formatted for automated systems.
+All reasoning must be within the <think></think> tags, no reasoning should occur outside those tags
 
-Ensure the reasoning is intuitive, free from LaTeX, and easy to follow. Use the format below:
+<think> 
+Problem: {{ question }}  
+Reasoning:  
+1. Start with the expression.  
+2. Explain and solve step by step
+3. Conclude with the final result based on the above steps.
 
-<think> Question: {{ question }} Reasoning: 1. Start with the given expression: {{ expression }}. 2. Apply PEMDAS or relevant rules step by step: - {{ explanation }} 3. Derive the result following the steps above. </think> <answer> {{ answer }} </answer> <verifier_answer> {{ answer }} </verifier_answer> ``` ```
-This fully Jinja-compliant template dynamically incorporates the question, expression, explanation, and answer. It maintains clarity while separating reasoning (<think>), final output for users (<answer>), and raw output for verification systems (<verifier_answer>)
+Recheck the steps, and answer if there is a discrepancy
+</think>  
+
+<answer> final answer </answer>  
+
+<verifier_answer> clean answer used for verification </verifier_answer>
