@@ -50,7 +50,6 @@ def main():
     for _ in range(args.num_samples):
         # 1. Generate a random expression based on the chosen difficulty
         expression = generator.generate_random_expression(args.difficulty)
-        print(expression)
 
         # 2. Compile the expression
         compiler = ArithmeticCompiler(expression)

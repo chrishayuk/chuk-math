@@ -1,6 +1,8 @@
+import os
 from abc import ABC, abstractmethod
 from decimal import Decimal
 from typing import Any, Dict, List
+from jinja2 import Environment, FileSystemLoader
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.output_parsers import StrOutputParser
 from langchain.prompts import PromptTemplate
@@ -171,36 +173,32 @@ class InstructionEmitter(IInstructionEmitter):
 
     def get_pretty_result(self, question, answer):
         """Generate a natural language response using the question and answer."""
-        response_template = (
-            'For the question "{question}" and it\'s associated expression "{expression}", '
-            'the result is "{answer}".  Now create a highly readable version of the answer, '
-            'keep it simple, not LATEX.  Just provide the answer response, no premable, '
-            'do not change the values for the question or expression.'
-        )
-        input_text = response_template.format(
-            expression=self.expression,
-            answer=answer,
-            question=question
-        )
-        return self.get_llm_response(input_text)
+        response_template = """For the question "{question}" and it's associated expression "{expression}", the result is "{answer}".  Now create a highly readable version of the answer, keep it simple, not LATEX.  Just provide the answer response, no premable, do not change the values for the question or expression."""
+
+        # call the llm
+        return self.get_llm_response(response_template.format(expression=self.expression, answer=answer, question=question))
 
     def get_step_by_step_explanation(self, question, answer, explanation) -> str:
-        """Generate a step-by-step explanation using the explanation."""
-        response_template = (
-            'For the question "{question}" and it\'s associated expression "{expression}", '
-            'the result is "{answer}.  The following is the step by step explanation: {explanation}. '
-            'Now create a highly readable version of the answer, with a highly readable step by step '
-            'explanation, using the provided explanation, keep it simple, not LATEX. '
-            'Just provide the answer response, no premable. Provide the step by step '
-            'analysis before providing the answer'
-        )
-        input_text = response_template.format(
+        """Generate a step-by-step explanation using the Jinja template."""
+        # Locate the folder containing your template.jinja file
+        templates_dir = os.path.join(os.path.dirname(__file__), 'prompt_templates')
+
+        # Create a Jinja environment pointing to that folder
+        env = Environment(loader=FileSystemLoader(templates_dir))
+
+        # Load the specific template file
+        template = env.get_template('math_stepbystep_template.jinja')
+
+        # Render the template, injecting your variables
+        rendered_output = template.render(
+            question=question,
             expression=self.expression,
             answer=answer,
-            question=question,
             explanation=explanation
         )
-        return self.get_llm_response(input_text)
+
+        # If you still wish to pass the rendered output to your LLM, do so here
+        return self.get_llm_response(rendered_output)
 
     def get_llm_response(self, input_text: str) -> str:
         """Get a response from the LLM."""
