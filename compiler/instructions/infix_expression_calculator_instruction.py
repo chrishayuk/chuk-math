@@ -127,21 +127,43 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
             return None
 
         def build_expression_node(node):
-            if 'operator' in node:
+            # Handle binary expressions
+            if node.get("type") == "BinaryExpression":
                 return ExpressionNode(
-                    value=node['operator']['value'],
-                    left=build_expression_node(node['left']),
-                    right=build_expression_node(node['right'])
+                    value=node["operator"]["value"],  # e.g. '+', '-', '*', '/'
+                    left=build_expression_node(node["left"]),
+                    right=build_expression_node(node["right"])
                 )
-            elif 'value' in node:
-                return ExpressionNode(value=node['value'])
+
+            # Handle unary expressions (e.g. -5) if your parser produces them
+            elif node.get("type") == "UnaryExpression":
+                # Typically, you’ll have node["operator"] and node["argument"]
+                return ExpressionNode(
+                    value=node["operator"]["value"],  # e.g. '-'
+                    left=build_expression_node(node["operand"]),
+                    right=None
+                )
+
+            # Handle simple literals
+            elif node.get("type") == "Literal":
+                return ExpressionNode(value=node["value"])
+
+            # Fallback: If the parser doesn’t always set "type", or uses a different structure
+            # but sets "operator" or "value" directly, you can check for them here:
+            elif "operator" in node and "left" in node and "right" in node:
+                # If your parser only sets "operator" for a proper binary expression
+                return ExpressionNode(
+                    value=node["operator"]["value"],
+                    left=build_expression_node(node["left"]),
+                    right=build_expression_node(node["right"])
+                )
+            elif "value" in node:
+                # Then it’s presumably a literal
+                return ExpressionNode(value=node["value"])
+
             return None
-        
-        # create the expression treee
+
         expression_tree = ExpressionTree()
-
-        # set the root
         expression_tree.root = build_expression_node(ast_node)
-
-        # return the expression tree
         return expression_tree
+

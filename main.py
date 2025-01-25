@@ -11,7 +11,7 @@ def main():
     parser.add_argument("expression", type=str, help="The arithmetic expression to compile")
 
     # Output format
-    parser.add_argument("--format", type=str, choices=["json", "jsonl", "llama2", "qa", "pretty", "step-by-step"], default="json",
+    parser.add_argument("--format", type=str, choices=["json", "jsonl", "llama2", "qa", "pretty", "step-by-step", "chat"], default="json",
                         help="The output format")
 
     # Specify language model
@@ -69,6 +69,11 @@ def main():
         elif args.format == "jsonl":
             # Emit JSONL
             output = compiler.instruction.emit_jsonl()
+            print(f"\nInstruction in {args.format.upper()} format:")
+            print(output)
+        elif args.format == "chat":
+            # Emit JSONL
+            output = compiler.instruction.emit_chat()
             print(f"\nInstruction in {args.format.upper()} format:")
             print(output)
         elif args.format == "llama2":

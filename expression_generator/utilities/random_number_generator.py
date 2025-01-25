@@ -1,35 +1,33 @@
+# expression_generator/utilities/random_number_generator.py
 import random
 
-def generate_random_number(min=1, max=10, allow_negative=False, allow_decimals=False, decimal_places=2):
+def generate_random_number(
+    min_val=1,
+    max_val=10,
+    allow_negative=False,
+    allow_decimals=False,
+    decimal_places=2
+):
     """
     Generate a random number with specified options.
     
     Parameters:
-    - min (int/float): Minimum value for the random number.
-    - max (int/float): Maximum value for the random number.
-    - allow_negative (bool): If True, the number can be negative.
-    - allow_decimals (bool): If True, the number can be a decimal.
-    - decimal_places (int): Number of decimal places if allow_decimals is True.
-
-    Returns:
-    - float/int: Generated random number.
+    - min_val (float): Minimum possible value
+    - max_val (float): Maximum possible value
+    - allow_negative (bool): If True, the number can be negative
+    - allow_decimals (bool): If True, the number can be a float
+    - decimal_places (int): Number of decimal digits to keep
     """
-    
-    # check if we're allowing decimals
     if allow_decimals:
-        # generate a decimal
-        number = random.uniform(min, max)
-
-        # round the number
+        # Generate a float, then round to the desired number of decimal places
+        number = random.uniform(min_val, max_val)
         number = round(number, decimal_places)
     else:
-        # generate an integer
-        number = random.randint(min, max)
-    
-    # check we're allowing negative
+        # Generate an integer
+        number = random.randint(int(min_val), int(max_val))
+
+    # Possibly flip sign to negative
     if allow_negative and random.random() < 0.5:
-        # set the number as negative
         number = -number
 
-    # return the number
     return number

@@ -1,18 +1,49 @@
 # Introduction
 This is an experimental compiler that can be used to generate math datasets.
+At a high level the various cli's provided can perform the following tasks..
 
-## TODO
-- Use the LLM to produce a nice answer from question and result
-- Integrate the explanation
-- Use the LLM to smooth out the explanation
-- Add the rest of the instructions
-- Add a judge model for validating
+- generate synthetic data consisting of arithmetic expressions
+- generate arithmetic expressions
+- tokenize arithmetic expressions
+- parse artithmetic expressions into an Abstract Syntax Tree
+- compile arithmetic expressions
+
+## Examples
+For example, if you wish to generate a jsonl file that generates an expression, generates an abstract syntax tree of the expression, generates a sample arithmetic question for the expression, and some steps for the solving the expression including the answer, you can use the following command
+
+```bash
+uv run main.py "3 + 5 * (10 - 4)" --format jsonl
+```
+
+if you wish to generate an llm prettified version of the questions and explanations, you can run
+
+```bash
+uv run main.py "3 + 5 * (10 - 4)" --llm "phi4" --format jsonl
+```
 
 ## Installation
+The following outlines how to install the math compiler on your machine
+
+### pip
+If you are using pip, you can perform the following
+
 To install dependencies
 
 ```bash
 pip install -r requirements.txt
+```
+
+## uv
+If you are using uv you should install uv first
+
+```bash
+pip install uv
+```
+
+and then resync dependencies
+
+```bash
+uv sync --reinstall
 ```
 
 ## Unit Test
@@ -20,6 +51,12 @@ To run unit testing
 
 ```bash
 pytest
+```
+
+or
+
+```bash
+uv run pytest
 ```
 
 ## CLI
@@ -79,4 +116,10 @@ python main.py "3 + 5 * (10 - 4)"
 
 ```bash
 python main.py "3 + 5 * (10 - 4)" --llm "mistral-nemo"
+```
+
+
+### generating chat sample
+```bash
+python generate_chat_samples.py -n 5 -d "very easy" --llm "granite3.1-dense" > chat_samples_medium.jsonl
 ```

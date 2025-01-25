@@ -1,6 +1,4 @@
 import argparse
-from expression_generator.utilities.random_number_generator import generate_random_number
-from expression_generator.utilities.random_operator_generator import generate_random_operator
 from expression_generator.arithmetic_expression_generator import ArithmeticExpressionGenerator
 
 def main():
