@@ -30,7 +30,7 @@ class InstructionEmitter(IInstructionEmitter):
         else:
             self.llm = None
 
-    def emit_instruction(self) -> Dict[str, Any]:
+    def emit_instruction(self, step_by_step_template_name = "math_stepbystep_template.jinja") -> Dict[str, Any]:
         # Extract the expression from the ast
         self.expression = self.extract_expression_from_ast(self.ast)
 
@@ -49,7 +49,7 @@ class InstructionEmitter(IInstructionEmitter):
         # Generate LLM responses only if an LLM is provided
         if self.llm:
             pretty_result = self.get_pretty_result(question, answer)
-            step_by_step_result = self.get_step_by_step_explanation(question, answer, explanation)
+            step_by_step_result = self.get_step_by_step_explanation(question, answer, explanation, step_by_step_template_name)
         else:
             pretty_result = step_by_step_result = None
 
@@ -79,9 +79,9 @@ class InstructionEmitter(IInstructionEmitter):
         """Emit JSON Lines."""
         return emit_jsonl(self.emit_instruction())
     
-    def emit_chat(self):
+    def emit_chat(self, step_by_step_template_name = "math_stepbystep_template.jinja"):
         """Emit chat format."""
-        return emit_chat(self.emit_instruction())
+        return emit_chat(self.emit_instruction(step_by_step_template_name))
 
     def emit_llama2(self):
         """Emit llama2 format."""
@@ -178,16 +178,19 @@ class InstructionEmitter(IInstructionEmitter):
         # call the llm
         return self.get_llm_response(response_template.format(expression=self.expression, answer=answer, question=question))
 
-    def get_step_by_step_explanation(self, question, answer, explanation) -> str:
+    def get_step_by_step_explanation(self, question, answer, explanation, template_name = "math_stepbystep_template.jinja") -> str:
         """Generate a step-by-step explanation using the Jinja template."""
-        # Locate the folder containing your template.jinja file
+        #template_name = "math_stepbystep_reflection_template.jinja"
+        template_name = "math_stepbystep_template.jinja"
+
+        # Locate the folder containing your template files
         templates_dir = os.path.join(os.path.dirname(__file__), 'prompt_templates')
 
         # Create a Jinja environment pointing to that folder
         env = Environment(loader=FileSystemLoader(templates_dir))
 
-        # Load the specific template file
-        template = env.get_template('math_stepbystep_template.jinja')
+        # Load the specific template file dynamically based on the template_name parameter
+        template = env.get_template(template_name)
 
         # Render the template, injecting your variables
         rendered_output = template.render(
@@ -199,6 +202,7 @@ class InstructionEmitter(IInstructionEmitter):
 
         # If you still wish to pass the rendered output to your LLM, do so here
         return self.get_llm_response(rendered_output)
+
 
     def get_llm_response(self, input_text: str) -> str:
         """Get a response from the LLM."""

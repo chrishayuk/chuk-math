@@ -63,7 +63,9 @@ def main():
 
         # 3. Retrieve the emitted output in “chat” format
         #    The compiler’s `emit_chat()` method returns JSON (dict) serialised as a string (or you can serialise it here)
-        chat_output = compiler.instruction.emit_chat()
+        #step_by_step_template_name = "math_stepbystep_reflection_template.jinja"
+        step_by_step_template_name = "math_stepbystep_template.jinja"
+        chat_output = compiler.instruction.emit_chat(step_by_step_template_name)
 
         # Optionally strip control characters / replace LaTeX if needed
         chat_output = strip_control_characters(replace_latex_symbols(chat_output))

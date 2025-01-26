@@ -1,0 +1,11 @@
+For the question "{{question}}" and it's associated expression "{{expression}}", the result is "{{answer}}.  
+The following is the step by step explanation: {{explanation}}.  
+Now create a highly readable version of the answer, with a highly readable step by step explanation, using the provided explanation, keep it simple, not LATEX.  
+Provide the step by step analysis before providing the answer.  
+If any discrepancies are identified, re-calculate and provide the correct steps without referencing prior mistakes or external explanations.  
+Enclose the Reasoning (step by step explanation) within <think></think> tags, ensure you repeat and include the question within the think tags also i.e. 
+<think>question then reasoning here.  Recheck the steps, and answer if there is a discrepancy</think>.   
+The final answer which is outputted to the user as a pretty response should be outputted within answer tags 
+<answer>answer goes here</answer>
+Include a <verifier_answer> section containing only the result, formatted for automated systems.
+<verifier_answer>clean answer used for verification</verifier_answer>

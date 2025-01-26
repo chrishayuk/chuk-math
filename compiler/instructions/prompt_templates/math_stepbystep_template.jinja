@@ -1,6 +1,5 @@
 {# Enhanced Template for Generating Clear Explanations and Verifications #}
-
-For the problem "{{ question }}", involving the expression "{{ expression }}", produce a clear, step-by-step explanation of how the result "{{ answer }}" was derived. If any discrepancies are identified, re-calculate and provide the correct steps without referencing prior mistakes or external explanations.
+For the problem "{{question}}", involving the expression "{{expression}}", produce a clear, step-by-step explanation of how the result "{{ answer }}" was derived. If any discrepancies are identified, re-calculate and provide the correct steps without referencing prior mistakes or external explanations.
 
 Restate the problem clearly using <think> tags.
 Break down the solution into intuitive, logically ordered steps, ensuring all calculations follow proper mathematical principles (e.g., PEMDAS for arithmetic). Use plain language and avoid unnecessary technical jargon.
@@ -9,7 +8,7 @@ Include a <verifier_answer> section containing only the result, formatted for au
 All reasoning must be within the <think></think> tags, no reasoning should occur outside those tags
 
 <think> 
-Problem: {{ question }}  
+Problem: {{question}}  
 Reasoning:  
 1. Start with the expression.  
 2. Explain and solve step by step
@@ -17,7 +16,5 @@ Reasoning:
 
 Recheck the steps, and answer if there is a discrepancy
 </think>  
-
-<answer> final answer </answer>  
-
-<verifier_answer> clean answer used for verification </verifier_answer>
+<answer>final answer</answer>
+<verifier_answer>clean answer used for verification</verifier_answer>
