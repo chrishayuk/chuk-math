@@ -123,3 +123,8 @@ python main.py "3 + 5 * (10 - 4)" --llm "mistral-nemo"
 ```bash
 python generate_chat_samples.py -n 5 -d "very easy" --llm "granite3.1-dense" > chat_samples_medium.jsonl
 ```
+
+### generating verifier sample
+```bash
+python generate_verifier_samples.py -n 20 -d "very easy" --llm "granite3.1-dense" > output/verifier_samples_medium.jsonl
+```

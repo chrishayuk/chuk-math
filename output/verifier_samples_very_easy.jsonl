@@ -1,0 +1,20 @@
+{"prompt": "84 + 29", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "What's 27 * 91 + 20?", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "Solve the expression: 40 + 12", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "Evaluate the expression: 73 + 61 * 73.", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "Find the value of this arithmetic challenge: 21 * 90.", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "Calculate the result of the expression: 86 - 80 + 18.", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "53 * 48 * 46: what's the answer?", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "Work out 88 - 41 + 90 and display the answer", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "Calculate 78 - 24 + 57 and show the result", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "What is 95 + 93 - 25 equal to?", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "Resolve 63 - 78 - 22 and note the result.", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "Figure out the answer to 76 + 73 - 26", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "Figure out the answer to 25 - 69 - 85", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "60 - 51 * 92: what's the answer?", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "Figure out the answer to 10 - 71 - 91", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "Solve the expression: 27 - 37", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "Solve the following expression: 92 - 2.", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "Evaluate the expression: 26 * 46.", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "What is the value of 56 + 49 - 25?", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
+{"prompt": "What is the value of 98 + 55?", "verifiers": [{"name": "reasoning_format", "url": "http://0.0.0.0:8000"}]}
