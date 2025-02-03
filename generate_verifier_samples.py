@@ -74,7 +74,7 @@ def main():
                 "name": "verifier_answer",
                 "url": "http://0.0.0.0:8000",
                 "args": {
-                    "gold_answer": str(numeric_answer)
+                    "gold_solution": str(numeric_answer)
                 }
             })
 
