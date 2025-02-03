@@ -126,5 +126,10 @@ python generate_chat_samples.py -n 5 -d "very easy" --llm "granite3.1-dense" > c
 
 ### generating verifier sample
 ```bash
-python generate_verifier_samples.py -n 20 -d "very easy" --llm "granite3.1-dense" > output/verifier_samples_medium.jsonl
+python generate_verifier_samples.py -n 20 -d "very easy" --llm "granite3.1-dense" > output/verifier_samples_very_easy.jsonl
+```
+
+### generating verifier sample
+```bash
+python generate_boxed_verifier_samples.py -n 20 -d "very easy" --llm "granite3.1-dense" > output/boxed_verifier_samples_very_easy.jsonl
 ```
