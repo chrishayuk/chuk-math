@@ -18,7 +18,7 @@ def replace_latex_symbols(text: str) -> str:
             .replace(r'\times', '*'))
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate JSONL with 'reasoning_format' and 'verifier_answer' verifiers.")
+    parser = argparse.ArgumentParser(description="Generate JSONL with verifiers (reasoning_format, answer_satisfaction, verifier_answer).")
     parser.add_argument("-n", "--num_samples", type=int, default=1,
                         help="Number of samples to generate.")
     parser.add_argument("-d", "--difficulty", type=str,
@@ -61,6 +61,7 @@ def main():
             print("Could not parse user message.")
             continue
 
+        # Always add 'reasoning_format' verifier
         verifiers = [
             {
                 "name": "reasoning_format",
@@ -68,8 +69,16 @@ def main():
             }
         ]
 
-        # Instead of 'boxed_answer', we use 'verifier_answer' for a plain numeric check
+        # If we have a numeric_answer, add 'answer_satisfaction' + 'verifier_answer'
         if numeric_answer is not None:
+            verifiers.append({
+                "name": "answer_satisfaction",
+                "url": "http://0.0.0.0:8000",
+                "args": {
+                    "question": user_message,
+                    "gold_answer": str(numeric_answer)
+                }
+            })
             verifiers.append({
                 "name": "verifier_answer",
                 "url": "http://0.0.0.0:8000",
