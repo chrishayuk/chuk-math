@@ -64,7 +64,7 @@ def main():
         # Always add 'reasoning_format' verifier
         verifiers = [
             {
-                "name": "reasoning_format",
+                "name": "reasoning_format_with_verifier_answer",
                 "url": "http://0.0.0.0:8000"
             }
         ]
