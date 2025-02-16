@@ -133,3 +133,8 @@ python generate_verifier_samples.py -n 20 -d "very easy" --llm "granite3.1-dense
 ```bash
 python generate_boxed_verifier_samples.py -n 20 -d "very easy" --llm "granite3.1-dense" > output/boxed_verifier_samples_very_easy.jsonl
 ```
+
+
+```bash
+python generate_verifier_samples.py > output/verifier_samples_all.jsonl
+```
