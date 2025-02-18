@@ -8,6 +8,7 @@ from langchain.prompts import PromptTemplate
 from compiler.instructions.instruction_emitter import InstructionEmitter
 from explanations.expression_explanation_generator import ExpressionExplanationGenerator
 from explanations.expression_node import ExpressionNode
+from explanations.expression_placeholder_explanation_generator import PlaceholderExpressionExplanationGenerator
 from explanations.expression_tree import ExpressionTree
 
 class InfixExpressionCalculatorInstruction(InstructionEmitter):
@@ -120,6 +121,63 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
         explanation_text, result = explanation_generator.generate_explanation(0)
 
         return explanation_text
+    
+    def generate_placeholder_explanation(self) -> str:
+        """
+        Converts the current AST into an ExpressionTree, then uses
+        PlaceholderExpressionExplanationGenerator to produce a placeholder-based
+        explanation (verifiable steps + real steps + snapshot map).
+        The verifiable portion is wrapped in <verifier_answer> tags,
+        while the real steps (plain text) and final answer are in <answer>.
+        """
+        # 1) Convert AST -> ExpressionTree
+        tree = self.ast_to_expression_tree(self.ast)
+
+        # 2) Run the PlaceholderExpressionExplanationGenerator
+        generator = PlaceholderExpressionExplanationGenerator(tree.root)
+        explanation_data = generator.generate_explanation(missing_element=0)
+
+        placeholder_steps = explanation_data["placeholder_steps"]
+        real_steps = explanation_data["real_steps"]
+        placeholder_map = explanation_data["placeholder_map"]
+        snapshots = explanation_data["placeholder_map_snapshots"]
+        final_value = explanation_data["final_value"]
+
+        # 3) Build the output
+        lines = []
+
+        # === Verifiable Section ===
+        lines.append("<verifier_answer>")
+        for i, step_text in enumerate(placeholder_steps):
+            lines.append(f"  <step index=\"{i}\">")
+            lines.append(f"    <description>{step_text}</description>")
+            lines.append("    <placeholder_map_after_step>")
+            snapshot = snapshots[i]
+            for ph, val in snapshot.items():
+                lines.append(f"      <placeholder name=\"{ph}\">{val}</placeholder>")
+            lines.append("    </placeholder_map_after_step>")
+            lines.append("  </step>")
+
+        # Final placeholder map
+        lines.append("  <final_placeholder_map>")
+        for ph, val in placeholder_map.items():
+            lines.append(f"    <placeholder name=\"{ph}\">{val}</placeholder>")
+        lines.append("  </final_placeholder_map>")
+
+        # Final result as part of verifier_answer
+        lines.append(f"  <final_result>{final_value}</final_result>")
+        lines.append("</verifier_answer>")
+
+        # === Plain-text answer with the final numeric result
+        lines.append("<answer>")
+        for step_text in real_steps:
+            lines.append(step_text)
+        # Append the final numeric result at the end
+        lines.append(f"Final Answer: {final_value}")
+        lines.append("</answer>")
+
+        return "\n".join(lines)
+
 
     def ast_to_expression_tree(self, ast_node) -> ExpressionTree:
         """Converts an AST to an ExpressionTree."""
@@ -166,4 +224,3 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
         expression_tree = ExpressionTree()
         expression_tree.root = build_expression_node(ast_node)
         return expression_tree
-

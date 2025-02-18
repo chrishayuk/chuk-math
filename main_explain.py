@@ -1,6 +1,7 @@
 
 from explanations.expression_explanation_generator import ExpressionExplanationGenerator
 from explanations.expression_node import ExpressionNode
+from explanations.expression_placeholder_explanation_generator import PlaceholderExpressionExplanationGenerator
 from explanations.expression_tree import ExpressionTree
 
 def main():
@@ -23,7 +24,8 @@ def main():
     print(f"Result of the expression: {result_display}")
 
     # Generate explanation
-    explanation_generator = ExpressionExplanationGenerator(root)
+    #explanation_generator = ExpressionExplanationGenerator(root)
+    explanation_generator = PlaceholderExpressionExplanationGenerator
     explanation_text, final_result = explanation_generator.generate_explanation(0)
     print("Explanation of the steps:")
     print(explanation_text)

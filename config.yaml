@@ -1,13 +1,13 @@
 verifier_url: "https://verifiers-weathered-glitter-8347.fly.dev"
 stages:
   - difficulty: "very easy"
-    count: 25
+    count: 1
     llm: "granite3.1-dense"
 
   - difficulty: "easy"
-    count: 25
+    count: 1
     llm: "granite3.1-dense"
 
   - difficulty: "medium"
-    count: 25
+    count: 1
     llm: "granite3.1-dense"

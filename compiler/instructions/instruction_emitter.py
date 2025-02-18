@@ -44,7 +44,8 @@ class InstructionEmitter(IInstructionEmitter):
         answer = self.evaluate_expression()
 
         # Generate the explanation
-        explanation = self.generate_explanation()
+        #explanation = self.generate_explanation()
+        explanation = self.generate_placeholder_explanation()
 
         # Generate LLM responses only if an LLM is provided
         if self.llm:
@@ -66,6 +67,7 @@ class InstructionEmitter(IInstructionEmitter):
         }
 
         return instruction
+    
 
     def simplify_tokens(self, tokens: List[Any]) -> List[Dict[str, Any]]:
         """Converts tokens into a simplified representation."""
@@ -216,3 +218,5 @@ class InstructionEmitter(IInstructionEmitter):
                 return f"Error generating response from LLM: {e}"
         else:
             return input_text  # Fallback to the raw text if no LLM is available
+        
+    
