@@ -465,7 +465,7 @@ class TestInstructionEmitter:
 
     def test_emit_instruction_with_llm(self):
         """Test emit_instruction with LLM configured."""
-        from unittest.mock import MagicMock, patch
+        from unittest.mock import patch
 
         from chuk_math_gym.compiler.instructions.infix_expression_calculator_instruction import (
             InfixExpressionCalculatorInstruction,
@@ -504,7 +504,6 @@ class TestInstructionEmitter:
 
     def test_extract_expression_from_ast_unary(self):
         """Test extract_expression_from_ast with unary expression."""
-        from chuk_math_gym.compiler.instructions.instruction_emitter import InstructionEmitter
         from chuk_math_gym.compiler.instructions.infix_expression_calculator_instruction import (
             InfixExpressionCalculatorInstruction,
         )
@@ -568,7 +567,6 @@ class TestInstructionEmitterAdditional:
 
     def test_extract_expression_unknown_node_type(self):
         """Test extract_expression_from_ast with unknown node type."""
-        from chuk_math_gym.compiler.instructions.instruction_emitter import InstructionEmitter
         from chuk_math_gym.compiler.instructions.infix_expression_calculator_instruction import (
             InfixExpressionCalculatorInstruction,
         )
@@ -582,7 +580,7 @@ class TestInstructionEmitterAdditional:
 
     def test_get_step_by_step_explanation(self):
         """Test get_step_by_step_explanation method."""
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import patch
 
         from chuk_math_gym.compiler.instructions.infix_expression_calculator_instruction import (
             InfixExpressionCalculatorInstruction,
@@ -636,9 +634,7 @@ class TestInstructionEmitterAdditional:
         with patch(
             "chuk_math_gym.compiler.instructions.instruction_emitter.PromptTemplate"
         ) as mock_prompt:
-            with patch(
-                "chuk_math_gym.compiler.instructions.instruction_emitter.StrOutputParser"
-            ) as mock_parser:
+            with patch("chuk_math_gym.compiler.instructions.instruction_emitter.StrOutputParser"):
                 # Setup the chain mock
                 mock_prompt_instance = MagicMock()
                 mock_prompt.return_value = mock_prompt_instance
