@@ -30,6 +30,10 @@ class UnaryExpression(Expression):
         """Convert unary expression to dictionary, handles recursion."""
         return {
             "type": "UnaryExpression",
-            "operator": self.operator.value if hasattr(self.operator, 'value') else str(self.operator),
-            "operand": self.operand.to_dict() if hasattr(self.operand, 'to_dict') else str(self.operand),
+            "operator": self.operator.value
+            if hasattr(self.operator, "value")
+            else str(self.operator),
+            "operand": self.operand.to_dict()
+            if hasattr(self.operand, "to_dict")
+            else str(self.operand),
         }

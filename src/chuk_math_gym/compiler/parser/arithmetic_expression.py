@@ -97,14 +97,10 @@ class ArithmeticExpression:
         elif isinstance(ast_node, Decimal):
             return str(ast_node)
         elif isinstance(ast_node, Token):
-            return {
-                "type": ast_node.type,
-                "value": ast_node.value,
-                "position": ast_node.position
-            }
-        elif hasattr(ast_node, '__dict__'):
+            return {"type": ast_node.type, "value": ast_node.value, "position": ast_node.position}
+        elif hasattr(ast_node, "__dict__"):
             node_dict = {key: self.ast_to_dict(value) for key, value in ast_node.__dict__.items()}
-            node_dict['type'] = ast_node.__class__.__name__
+            node_dict["type"] = ast_node.__class__.__name__
             return node_dict
         else:
             return ast_node

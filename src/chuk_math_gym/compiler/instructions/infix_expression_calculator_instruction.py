@@ -1,18 +1,28 @@
 import json
 import random
 from decimal import Decimal, InvalidOperation, getcontext
-from langchain_ollama import OllamaLLM
+from typing import Any, Dict, List, Optional
 from sympy import sympify, SympifyError
 from langchain_core.output_parsers import StrOutputParser
 from langchain.prompts import PromptTemplate
 from chuk_math_gym.compiler.instructions.instruction_emitter import InstructionEmitter
-from chuk_math_gym.explanations.expression_explanation_generator import ExpressionExplanationGenerator
+from chuk_math_gym.explanations.expression_explanation_generator import (
+    ExpressionExplanationGenerator,
+)
 from chuk_math_gym.explanations.expression_node import ExpressionNode
-from chuk_math_gym.explanations.expression_placeholder_explanation_generator import PlaceholderExpressionExplanationGenerator
+from chuk_math_gym.explanations.expression_placeholder_explanation_generator import (
+    PlaceholderExpressionExplanationGenerator,
+)
 from chuk_math_gym.explanations.expression_tree import ExpressionTree
 
+
 class InfixExpressionCalculatorInstruction(InstructionEmitter):
-    def __init__(self, ast: dict, tokens: list = None, llm: str = None):
+    def __init__(
+        self,
+        ast: Dict[str, Any],
+        tokens: Optional[List[Any]] = None,
+        llm: Optional[str] = None,
+    ):
         # Check if we're parsing an ast or tokens
         if isinstance(ast, str):
             ast = json.loads(ast)
@@ -56,9 +66,9 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
         ]
 
         # Shuffle templates to increase randomness
-        random.shuffle(templates)   
+        random.shuffle(templates)
 
-        # get a random template
+        # get a random template
         template = random.choice(templates)()
 
         # If use_llm is True and llm is set up, fetch instruction from LLM
@@ -77,20 +87,24 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
             Question: """
 
         try:
+            if self.llm is None:
+                return "Error: No LLM configured"
+
             # Use the expression in the context
-            prompt = PromptTemplate(input_variables=["expression", "question"], template=prompt_template)
+            prompt = PromptTemplate(
+                input_variables=["expression", "question"], template=prompt_template
+            )
 
             # setup the chain
             chain = prompt | self.llm | StrOutputParser()
 
             # execute
-            response = chain.invoke({"expression":self.expression, "question":question})
+            response = chain.invoke({"expression": self.expression, "question": question})
 
             # return the response
-            return response
+            return str(response)
         except Exception as e:
             return f"Error generating instruction from LLM: {e}"
-        
 
     def safe_eval(self, expression: str) -> Decimal:
         try:
@@ -107,7 +121,7 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
             # Return the value
             getcontext().prec = 64
             decimal_result = Decimal(str(result))
-            return decimal_result.quantize(Decimal('1.0000')).normalize()
+            return decimal_result.quantize(Decimal("1.0000")).normalize()
         except (SympifyError, InvalidOperation, ValueError) as error:
             raise ValueError(f"Invalid expression or calculation error: {error}")
 
@@ -121,7 +135,7 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
         explanation_text, result = explanation_generator.generate_explanation(0)
 
         return explanation_text
-    
+
     def generate_placeholder_explanation(self) -> str:
         """
         Converts the current AST into an ExpressionTree, then uses
@@ -132,6 +146,8 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
         """
         # 1) Convert AST -> ExpressionTree
         tree = self.ast_to_expression_tree(self.ast)
+        if tree is None or tree.root is None:
+            return "Unable to generate explanation: invalid AST"
 
         # 2) Run the PlaceholderExpressionExplanationGenerator
         generator = PlaceholderExpressionExplanationGenerator(tree.root)
@@ -149,19 +165,19 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
         # === Verifiable Section ===
         lines.append("<verifier_answer>")
         for i, step_text in enumerate(placeholder_steps):
-            lines.append(f"  <step index=\"{i}\">")
+            lines.append(f'  <step index="{i}">')
             lines.append(f"    <description>{step_text}</description>")
             lines.append("    <placeholder_map_after_step>")
             snapshot = snapshots[i]
             for ph, val in snapshot.items():
-                lines.append(f"      <placeholder name=\"{ph}\">{val}</placeholder>")
+                lines.append(f'      <placeholder name="{ph}">{val}</placeholder>')
             lines.append("    </placeholder_map_after_step>")
             lines.append("  </step>")
 
         # Final placeholder map
         lines.append("  <final_placeholder_map>")
         for ph, val in placeholder_map.items():
-            lines.append(f"    <placeholder name=\"{ph}\">{val}</placeholder>")
+            lines.append(f'    <placeholder name="{ph}">{val}</placeholder>')
         lines.append("  </final_placeholder_map>")
 
         # Final result as part of verifier_answer
@@ -178,8 +194,9 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
 
         return "\n".join(lines)
 
-
-    def ast_to_expression_tree(self, ast_node) -> ExpressionTree:
+    def ast_to_expression_tree(
+        self, ast_node: Optional[Dict[str, Any]]
+    ) -> Optional[ExpressionTree]:
         """Converts an AST to an ExpressionTree."""
         if not ast_node:
             return None
@@ -190,7 +207,7 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
                 return ExpressionNode(
                     value=node["operator"]["value"],  # e.g. '+', '-', '*', '/'
                     left=build_expression_node(node["left"]),
-                    right=build_expression_node(node["right"])
+                    right=build_expression_node(node["right"]),
                 )
 
             # Handle unary expressions (e.g. -5) if your parser produces them
@@ -199,7 +216,7 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
                 return ExpressionNode(
                     value=node["operator"]["value"],  # e.g. '-'
                     left=build_expression_node(node["operand"]),
-                    right=None
+                    right=None,
                 )
 
             # Handle simple literals
@@ -213,7 +230,7 @@ class InfixExpressionCalculatorInstruction(InstructionEmitter):
                 return ExpressionNode(
                     value=node["operator"]["value"],
                     left=build_expression_node(node["left"]),
-                    right=build_expression_node(node["right"])
+                    right=build_expression_node(node["right"]),
                 )
             elif "value" in node:
                 # Then it’s presumably a literal

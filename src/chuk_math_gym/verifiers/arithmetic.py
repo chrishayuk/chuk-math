@@ -155,6 +155,7 @@ class ArithmeticVerifier(Verifier):
             # Try to parse as fraction
             try:
                 from fractions import Fraction
+
                 gold_value = float(Fraction(problem.gold_answer))
             except (ValueError, TypeError):
                 # Cannot parse gold answer - return error
@@ -188,7 +189,9 @@ class ArithmeticVerifier(Verifier):
             score=partial_credit,
             partial_credit=partial_credit,
             error_type=ErrorType.WRONG_ANSWER,
-            error_message=f"Error at step {first_error_step}" if first_error_step else "Final answer incorrect",
+            error_message=f"Error at step {first_error_step}"
+            if first_error_step
+            else "Final answer incorrect",
             steps_correct=steps_correct,
             steps_total=trace.total_steps,
             first_error_step=first_error_step,
@@ -211,7 +214,7 @@ class ArithmeticVerifier(Verifier):
                 correct=False,
                 score=0.0,
                 error_type=ErrorType.INVALID_FORMAT,
-                error_message=f"Step index {step_index} out of range (0-{len(trace.steps)-1})",
+                error_message=f"Step index {step_index} out of range (0-{len(trace.steps) - 1})",
             )
 
         step = trace.steps[step_index]
@@ -271,39 +274,45 @@ class ArithmeticVerifier(Verifier):
                 # Check if expression argument is valid
                 expr = args.get("expression", "")
                 if not self._is_valid_expression(expr):
-                    grades.append(ToolCallGrade(
-                        tool_name=tool_name,
-                        args=args,
-                        valid=False,
-                        necessary=False,
-                        efficient=False,
-                        penalty=0.2,
-                        error_message=f"Invalid expression: {expr}",
-                    ))
+                    grades.append(
+                        ToolCallGrade(
+                            tool_name=tool_name,
+                            args=args,
+                            valid=False,
+                            necessary=False,
+                            efficient=False,
+                            penalty=0.2,
+                            error_message=f"Invalid expression: {expr}",
+                        )
+                    )
                     continue
 
                 # Check if this was a trivially simple calculation
                 if self._is_trivial_calculation(expr):
-                    grades.append(ToolCallGrade(
-                        tool_name=tool_name,
-                        args=args,
-                        valid=True,
-                        necessary=False,  # Could do mentally
-                        efficient=False,
-                        penalty=0.1,
-                        error_message="Trivial calculation could be done mentally",
-                    ))
+                    grades.append(
+                        ToolCallGrade(
+                            tool_name=tool_name,
+                            args=args,
+                            valid=True,
+                            necessary=False,  # Could do mentally
+                            efficient=False,
+                            penalty=0.1,
+                            error_message="Trivial calculation could be done mentally",
+                        )
+                    )
                     continue
 
             # Valid, necessary, efficient call
-            grades.append(ToolCallGrade(
-                tool_name=tool_name,
-                args=args,
-                valid=True,
-                necessary=True,
-                efficient=True,
-                penalty=0.0,
-            ))
+            grades.append(
+                ToolCallGrade(
+                    tool_name=tool_name,
+                    args=args,
+                    valid=True,
+                    necessary=True,
+                    efficient=True,
+                    penalty=0.0,
+                )
+            )
 
         return grades
 
@@ -322,12 +331,12 @@ class ArithmeticVerifier(Verifier):
         answer = answer.strip()
 
         # Try to extract from boxed LaTeX
-        boxed_match = re.search(r'\\boxed\{([^}]+)\}', answer)
+        boxed_match = re.search(r"\\boxed\{([^}]+)\}", answer)
         if boxed_match:
             answer = boxed_match.group(1).strip()
 
         # Remove common LaTeX wrappers
-        answer = re.sub(r'\\\(|\\\)|\\\[|\\\]', '', answer)
+        answer = re.sub(r"\\\(|\\\)|\\\[|\\\]", "", answer)
         answer = answer.strip()
 
         # Try direct parsing
@@ -337,7 +346,7 @@ class ArithmeticVerifier(Verifier):
             pass
 
         # Try to extract number from text
-        number_match = re.search(r'-?\d+\.?\d*(?:[eE][+-]?\d+)?', answer)
+        number_match = re.search(r"-?\d+\.?\d*(?:[eE][+-]?\d+)?", answer)
         if number_match:
             try:
                 return float(number_match.group())
@@ -394,7 +403,7 @@ class ArithmeticVerifier(Verifier):
             return False
 
         # Basic validation: should contain numbers and operators
-        valid_pattern = r'^[\d\s\+\-\*\/\(\)\.\^]+$'
+        valid_pattern = r"^[\d\s\+\-\*\/\(\)\.\^]+$"
         return bool(re.match(valid_pattern, expr.strip()))
 
     def _is_trivial_calculation(self, expr: str) -> bool:
@@ -408,9 +417,9 @@ class ArithmeticVerifier(Verifier):
 
         # Check for single operation patterns
         trivial_patterns = [
-            r'^\d{1,2}[\+\-]\d{1,2}$',      # e.g., "3+5", "12-7"
-            r'^\d{1,2}\*\d{1,2}$',           # e.g., "3*4"
-            r'^\d{1,2}\/[1-9]$',             # e.g., "8/2"
+            r"^\d{1,2}[\+\-]\d{1,2}$",  # e.g., "3+5", "12-7"
+            r"^\d{1,2}\*\d{1,2}$",  # e.g., "3*4"
+            r"^\d{1,2}\/[1-9]$",  # e.g., "8/2"
         ]
 
         for pattern in trivial_patterns:

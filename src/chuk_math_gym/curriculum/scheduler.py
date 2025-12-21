@@ -5,7 +5,7 @@ The scheduler manages problem generation with adaptive difficulty,
 tracking performance and adjusting the curriculum accordingly.
 """
 
-from typing import Optional, Tuple, List, Dict, Any, Type
+from typing import Optional, Tuple, List, Dict, Any
 from dataclasses import dataclass, field
 import random
 import json
@@ -67,18 +67,20 @@ class ProgressTracker:
         self.session_score += result.score
 
         # Record in history
-        self.problem_history.append({
-            "problem_id": problem.id,
-            "domain": domain.value,
-            "difficulty": difficulty.value,
-            "correct": result.correct,
-            "score": result.score,
-            "error_type": result.error_type.value if result.error_type else None,
-        })
+        self.problem_history.append(
+            {
+                "problem_id": problem.id,
+                "domain": domain.value,
+                "difficulty": difficulty.value,
+                "correct": result.correct,
+                "score": result.score,
+                "error_type": result.error_type.value if result.error_type else None,
+            }
+        )
 
         # Trim history if needed
         if len(self.problem_history) > self.max_history:
-            self.problem_history = self.problem_history[-self.max_history:]
+            self.problem_history = self.problem_history[-self.max_history :]
 
     def get_metrics(self, domain: DomainType) -> PerformanceMetrics:
         """Get metrics for a domain."""
@@ -137,8 +139,7 @@ class ProgressTracker:
                 for d, m in self.domain_metrics.items()
             },
             "current_difficulties": {
-                d.value: diff.value
-                for d, diff in self.current_difficulties.items()
+                d.value: diff.value for d, diff in self.current_difficulties.items()
             },
             "session_problems": self.session_problems,
             "session_correct": self.session_correct,
@@ -147,7 +148,7 @@ class ProgressTracker:
         Path(path).write_text(json.dumps(data, indent=2))
 
     @classmethod
-    def load(cls, path: str) -> 'ProgressTracker':
+    def load(cls, path: str) -> "ProgressTracker":
         """Load progress from file."""
         data = json.loads(Path(path).read_text())
 
@@ -210,12 +211,15 @@ class CurriculumScheduler:
         if domain not in self._generators:
             if domain == DomainType.ARITHMETIC:
                 from chuk_math_gym.domains.arithmetic import ArithmeticGenerator
+
                 self._generators[domain] = ArithmeticGenerator()
             elif domain == DomainType.FRACTIONS:
                 from chuk_math_gym.domains.fractions import FractionsGenerator
+
                 self._generators[domain] = FractionsGenerator()
             elif domain == DomainType.LINEAR_EQUATIONS:
                 from chuk_math_gym.domains.linear_equations import LinearEquationsGenerator
+
                 self._generators[domain] = LinearEquationsGenerator()
             else:
                 raise ValueError(f"Unsupported domain: {domain}")
@@ -275,16 +279,14 @@ class CurriculumScheduler:
         self.tracker.record_result(problem, result)
 
         # Update strategy (for EMA-based strategies)
-        if hasattr(self.strategy, 'update_ema'):
+        if hasattr(self.strategy, "update_ema"):
             self.strategy.update_ema(problem.difficulty, result.score)
 
         # Check if difficulty should change
         metrics = self.tracker.get_metrics(problem.domain)
         current_diff = self.tracker.get_current_difficulty(problem.domain)
 
-        new_diff = self.strategy.select_difficulty(
-            metrics, current_diff, problem.domain
-        )
+        new_diff = self.strategy.select_difficulty(metrics, current_diff, problem.domain)
 
         if new_diff != current_diff:
             self.tracker.set_difficulty(problem.domain, new_diff)
@@ -311,14 +313,16 @@ class CurriculumScheduler:
             "domains": {},
         }
 
+        domains_dict: Dict[str, Any] = {}
         for domain in self.domains:
             metrics = self.tracker.get_metrics(domain)
-            summary["domains"][domain.value] = {
+            domains_dict[domain.value] = {
                 "difficulty": self.tracker.get_current_difficulty(domain).value,
                 "problems": metrics.total_problems,
                 "accuracy": metrics.accuracy,
                 "recent_accuracy": metrics.recent_accuracy,
             }
+        summary["domains"] = domains_dict
 
         return summary
 
@@ -355,7 +359,7 @@ class AdaptiveCurriculumScheduler(CurriculumScheduler):
         self.mastery_threshold = mastery_threshold
         self.repetition_factor = repetition_factor
 
-        self._difficult_problems: List[Tuple[Problem, Trace]] = []
+        self._difficult_problems: List[Tuple[Problem, Optional[Trace]]] = []
         self._max_difficult = 50
 
     def next_problem(
@@ -365,18 +369,16 @@ class AdaptiveCurriculumScheduler(CurriculumScheduler):
     ) -> Tuple[Problem, Trace]:
         """Get next problem with spaced repetition."""
         # Occasionally repeat a difficult problem
-        if (
-            self._difficult_problems
-            and random.random() < self.repetition_factor
-        ):
-            problem, trace = random.choice(self._difficult_problems)
+        if self._difficult_problems and random.random() < self.repetition_factor:
+            problem, _trace = random.choice(self._difficult_problems)
             # Regenerate with new seed to vary slightly
             generator = self._get_generator(problem.domain)
-            return generator.generate(
+            result: Tuple[Problem, Trace] = generator.generate(
                 seed=self._seed_counter,
                 difficulty=problem.difficulty,
                 tool_policy=tool_policy,
             )
+            return result
 
         return super().next_problem(domain, tool_policy)
 
@@ -397,8 +399,7 @@ class AdaptiveCurriculumScheduler(CurriculumScheduler):
         else:
             # Remove from difficult if mastered
             self._difficult_problems = [
-                (p, t) for p, t in self._difficult_problems
-                if p.id != problem.id
+                (p, t) for p, t in self._difficult_problems if p.id != problem.id
             ]
 
     def is_mastered(self, domain: DomainType) -> bool:
@@ -409,7 +410,4 @@ class AdaptiveCurriculumScheduler(CurriculumScheduler):
 
     def get_mastery_status(self) -> Dict[str, bool]:
         """Get mastery status for all domains."""
-        return {
-            domain.value: self.is_mastered(domain)
-            for domain in self.domains
-        }
+        return {domain.value: self.is_mastered(domain) for domain in self.domains}

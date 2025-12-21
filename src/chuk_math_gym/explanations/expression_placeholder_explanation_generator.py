@@ -1,16 +1,19 @@
 # compiler/explanations/expression_placeholder_explanation_generator.py
 
+from typing import Any, Dict, List, Tuple
+
 from chuk_math_gym.explanations.expression_node import ExpressionNode
+
 
 class PlaceholderExpressionExplanationGenerator:
     """
     Generates two sets of explanations for an ExpressionNode tree:
-      1) Placeholder steps (like "STEP 0: <x1> = 3"), showing how placeholders (x1, x2, etc.) 
+      1) Placeholder steps (like "STEP 0: <x1> = 3"), showing how placeholders (x1, x2, etc.)
          are assigned for literals or computed for sub-expressions.
       2) Real (numeric) steps (like "STEP 0: 3 = 3.0"), showing the actual arithmetic.
 
     Also tracks:
-      - A placeholder map (placeholder -> numeric_value) 
+      - A placeholder map (placeholder -> numeric_value)
       - Snapshots of the map after each step,
       - Final placeholder and final numeric value.
 
@@ -28,23 +31,23 @@ class PlaceholderExpressionExplanationGenerator:
         :param root: The root ExpressionNode of the expression tree.
         """
         self.root = root
-        
+
         # Placeholder steps, e.g. STEP 0: <x1> = 3
-        self.placeholder_steps = []
-        
+        self.placeholder_steps: List[str] = []
+
         # Real steps, e.g. STEP 0: 3 = 3.0
-        self.real_steps = []
-        
+        self.real_steps: List[str] = []
+
         # Current map: { 'x1': 3.0, 'x2': 5.0, ... }
-        self.placeholder_map = {}
-        
+        self.placeholder_map: Dict[str, float] = {}
+
         # List of dict snapshots after each step
-        self.placeholder_map_snapshots = []
-        
+        self.placeholder_map_snapshots: List[Dict[str, float]] = []
+
         # Generates unique placeholder labels: x1, x2, x3, ...
         self.placeholder_counter = 1
 
-    def generate_explanation(self, missing_element: float):
+    def generate_explanation(self, missing_element: float) -> Dict[str, Any]:
         """
         Evaluates the entire expression tree while building explanations
         in both placeholder and real value forms.
@@ -67,46 +70,46 @@ class PlaceholderExpressionExplanationGenerator:
         self.placeholder_map = {}
         self.placeholder_map_snapshots = []
         self.placeholder_counter = 1
-        
+
         # Recursively compute placeholders & numeric values from the root
-        final_placeholder, final_value = self._evaluate_with_placeholders(self.root, missing_element)
-        
+        final_placeholder, final_value = self._evaluate_with_placeholders(
+            self.root, missing_element
+        )
+
         return {
             "placeholder_steps": self.placeholder_steps,
             "real_steps": self.real_steps,
             "placeholder_map": self.placeholder_map,
             "placeholder_map_snapshots": self.placeholder_map_snapshots,
             "final_placeholder": final_placeholder,
-            "final_value": final_value
+            "final_value": final_value,
         }
 
-    def _evaluate_with_placeholders(self, node: ExpressionNode, missing_element: float):
+    def _evaluate_with_placeholders(
+        self, node: ExpressionNode, missing_element: float
+    ) -> Tuple[str, float]:
         """
         Recursively traverse the tree. For each node:
           - If node.value == '?', assign a new placeholder and use `missing_element`.
           - If node is a literal, assign a new placeholder for that value.
-          - If node is an operator, recursively evaluate children, 
+          - If node is an operator, recursively evaluate children,
             then assign a new placeholder for the resulting value.
 
         Returns: (placeholder_label, numeric_value)
         """
         # 1) Special case: node.value == '?' (missing element)
-        if node.value == '?':
+        if node.value == "?":
             placeholder_label = self._assign_placeholder()
             self.placeholder_map[placeholder_label] = missing_element
-            
+
             # Placeholder step
             step_count_p = len(self.placeholder_steps)
-            self.placeholder_steps.append(
-                f"STEP {step_count_p}: <{placeholder_label}> = ?"
-            )
-            
+            self.placeholder_steps.append(f"STEP {step_count_p}: <{placeholder_label}> = ?")
+
             # Real step
             step_count_r = len(self.real_steps)
-            self.real_steps.append(
-                f"STEP {step_count_r}: ? = {missing_element}"
-            )
-            
+            self.real_steps.append(f"STEP {step_count_r}: ? = {missing_element}")
+
             self._snapshot_placeholder_map()
             return placeholder_label, missing_element
 
@@ -115,41 +118,46 @@ class PlaceholderExpressionExplanationGenerator:
             placeholder_label = self._assign_placeholder()
             numeric_value = float(node.value)  # Convert string to float
             self.placeholder_map[placeholder_label] = numeric_value
-            
+
             # Show each literal introduction
             step_count_p = len(self.placeholder_steps)
             self.placeholder_steps.append(
                 f"STEP {step_count_p}: <{placeholder_label}> = {node.value}"
             )
             step_count_r = len(self.real_steps)
-            self.real_steps.append(
-                f"STEP {step_count_r}: {node.value} = {numeric_value}"
-            )
-            
+            self.real_steps.append(f"STEP {step_count_r}: {node.value} = {numeric_value}")
+
             self._snapshot_placeholder_map()
             return placeholder_label, numeric_value
 
         # 3) Otherwise, it's an operator with left/right children
         operator = node.value
-        
+
         # Recursively handle the left child
+        if node.left is None:
+            raise ValueError("Operator node missing left child")
         left_placeholder, left_value = self._evaluate_with_placeholders(node.left, missing_element)
+
         # Recursively handle the right child
-        right_placeholder, right_value = self._evaluate_with_placeholders(node.right, missing_element)
-        
+        if node.right is None:
+            raise ValueError("Operator node missing right child")
+        right_placeholder, right_value = self._evaluate_with_placeholders(
+            node.right, missing_element
+        )
+
         # Perform the numeric operation
         result_value = self._perform_calculation(operator, left_value, right_value)
-        
+
         # Create a placeholder for this result
         result_placeholder = self._assign_placeholder()
         self.placeholder_map[result_placeholder] = result_value
-        
+
         # Placeholder step
         step_count_p = len(self.placeholder_steps)
         self.placeholder_steps.append(
             f"STEP {step_count_p}: (<{left_placeholder}> {operator} <{right_placeholder}>) = <{result_placeholder}>"
         )
-        
+
         # Real step
         step_count_r = len(self.real_steps)
         left_str = self._format_number_for_display(left_value)
@@ -158,7 +166,7 @@ class PlaceholderExpressionExplanationGenerator:
         self.real_steps.append(
             f"STEP {step_count_r}: ({left_str} {operator} {right_str}) = {result_str}"
         )
-        
+
         self._snapshot_placeholder_map()
         return result_placeholder, result_value
 
@@ -175,13 +183,13 @@ class PlaceholderExpressionExplanationGenerator:
         Perform the math operation given the operator and operand values.
         Supports +, -, *, /.
         """
-        if operator == '+':
+        if operator == "+":
             return left + right
-        elif operator == '-':
+        elif operator == "-":
             return left - right
-        elif operator == '*':
+        elif operator == "*":
             return left * right
-        elif operator == '/':
+        elif operator == "/":
             # If needed, handle divide-by-zero gracefully
             return left / right
         else:
@@ -197,9 +205,9 @@ class PlaceholderExpressionExplanationGenerator:
             return str(int(rounded))
         return str(rounded)
 
-    def _snapshot_placeholder_map(self):
+    def _snapshot_placeholder_map(self) -> None:
         """
-        Capture the current state of the placeholder map (dict) 
+        Capture the current state of the placeholder map (dict)
         and store it as a snapshot. Each snapshot is a shallow copy.
         """
         self.placeholder_map_snapshots.append(self.placeholder_map.copy())

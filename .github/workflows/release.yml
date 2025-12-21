@@ -47,6 +47,7 @@ jobs:
       run: |
         PREVIOUS_TAG=$(git tag --sort=-version:refname | grep -A1 "${{ steps.get_version.outputs.tag }}" | tail -1)
         if [ -z "$PREVIOUS_TAG" ] || [ "$PREVIOUS_TAG" = "${{ steps.get_version.outputs.tag }}" ]; then
+          # If no previous tag, use first commit
           PREVIOUS_TAG=$(git rev-list --max-parents=0 HEAD)
         fi
         echo "previous_tag=${PREVIOUS_TAG}" >> $GITHUB_OUTPUT
@@ -57,6 +58,7 @@ jobs:
         echo "## What's Changed" > RELEASE_NOTES.md
         echo "" >> RELEASE_NOTES.md
 
+        # Get commits since last tag
         git log ${{ steps.get_previous_tag.outputs.previous_tag }}..${{ steps.get_version.outputs.tag }} \
           --pretty=format:"* %s (%h)" \
           --no-merges >> RELEASE_NOTES.md

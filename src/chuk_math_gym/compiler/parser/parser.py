@@ -7,6 +7,7 @@ from chuk_math_gym.compiler.ast.expressions.unary_expression import UnaryExpress
 from chuk_math_gym.compiler.lexer.token_type import TokenType
 from chuk_math_gym.compiler.lexer.tokenizer import Token
 
+
 class Parser:
     def __init__(self, tokens: List[Token]):
         self.tokens = tokens
@@ -31,7 +32,7 @@ class Parser:
         if not self.tokens:
             # no tokens
             return None
-        
+
         # parse the expression
         return self.parse_expression()
 
@@ -42,7 +43,11 @@ class Parser:
 
         # keep going if we have token, and it's an operator
         while self.current_token and self.current_token.type in {
-            TokenType.PLUS, TokenType.MINUS, TokenType.MUL, TokenType.DIV, TokenType.POW
+            TokenType.PLUS,
+            TokenType.MINUS,
+            TokenType.MUL,
+            TokenType.DIV,
+            TokenType.POW,
         }:
             # get the precedence
             current_precedence = self.get_operator_precedence(self.current_token.type)
@@ -57,7 +62,7 @@ class Parser:
             # next token
             self.advance()
 
-            # parse the right hand side of the expression
+            # parse the right hand side of the expression
             right = self.parse_expression(current_precedence)
 
             # set the left handside
@@ -81,7 +86,7 @@ class Parser:
             # Handle unary minus as a UnaryExpression
             self.advance()
 
-            # parse primary
+            # parse primary
             operand = self.parse_primary()
 
             # return a unary expression
@@ -99,8 +104,10 @@ class Parser:
     def get_operator_precedence(self, operator_type: str) -> int:
         """Return the precedence of the operator."""
         precedences = {
-            TokenType.PLUS: 5, TokenType.MINUS: 5,
-            TokenType.MUL: 6, TokenType.DIV: 6,
+            TokenType.PLUS: 5,
+            TokenType.MINUS: 5,
+            TokenType.MUL: 6,
+            TokenType.DIV: 6,
             TokenType.POW: 7,
         }
 

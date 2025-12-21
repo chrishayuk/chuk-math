@@ -11,14 +11,13 @@ import ast
 import operator
 import re
 from fractions import Fraction
-from typing import Optional
+from typing import Any, Callable, Dict, Optional, Type
 
-from chuk_math_gym.schemas.problem import Problem, AnswerType
+from chuk_math_gym.schemas.problem import Problem
 from chuk_math_gym.schemas.trace import Trace
 from chuk_math_gym.schemas.verification import (
     VerificationResult,
     ErrorType,
-    ToolCallGrade,
 )
 from chuk_math_gym.verifiers.base import Verifier
 
@@ -270,7 +269,7 @@ class LinearEquationsVerifier(Verifier):
         answer = answer.strip()
 
         # Remove "x = " prefix if present
-        answer = re.sub(r'^[a-zA-Z]\s*=\s*', '', answer)
+        answer = re.sub(r"^[a-zA-Z]\s*=\s*", "", answer)
         answer = answer.strip()
 
         try:
@@ -284,7 +283,7 @@ class LinearEquationsVerifier(Verifier):
                         return Fraction(num, den)
 
             # Try integer
-            if re.match(r'^-?\d+$', answer):
+            if re.match(r"^-?\d+$", answer):
                 return Fraction(int(answer), 1)
 
             # Try decimal
@@ -346,9 +345,9 @@ class LinearEquationsVerifier(Verifier):
             # Handle cases like "2x" -> "2*value"
             # Use re.escape() to safely handle special regex characters in variable names
             expr = re.sub(
-                rf'(\d*)({re.escape(variable)})',
+                rf"(\d*)({re.escape(variable)})",
                 lambda m: f"({m.group(1) or '1'}*{value})",
-                expression
+                expression,
             )
 
             # Use safe AST-based evaluation instead of eval()
@@ -363,8 +362,8 @@ class LinearEquationsVerifier(Verifier):
 
         Only allows basic arithmetic operations (+, -, *, /).
         """
-        # Allowed operators
-        ops = {
+        # Allowed operators - typed as Any to handle both binary and unary operators
+        ops: Dict[Type[Any], Callable[..., float]] = {
             ast.Add: operator.add,
             ast.Sub: operator.sub,
             ast.Mult: operator.mul,
@@ -385,17 +384,17 @@ class LinearEquationsVerifier(Verifier):
                     raise ValueError(f"Unsupported operator: {type(node.op)}")
                 left = _eval_node(node.left)
                 right = _eval_node(node.right)
-                return ops[type(node.op)](left, right)
+                return float(ops[type(node.op)](left, right))
             elif isinstance(node, ast.UnaryOp):
                 if type(node.op) not in ops:
                     raise ValueError(f"Unsupported unary operator: {type(node.op)}")
                 operand = _eval_node(node.operand)
-                return ops[type(node.op)](operand)
+                return float(ops[type(node.op)](operand))
             else:
                 raise ValueError(f"Unsupported AST node: {type(node)}")
 
         try:
-            tree = ast.parse(expression, mode='eval')
+            tree = ast.parse(expression, mode="eval")
             return _eval_node(tree)
         except (SyntaxError, ValueError, TypeError, ZeroDivisionError):
             return None

@@ -4,8 +4,6 @@ Fractions Gym environment.
 Implements the MathGymEnv interface for fraction problems.
 """
 
-from typing import Optional
-
 from chuk_math_gym.schemas.problem import Problem, DifficultyLevel, ToolPolicy
 from chuk_math_gym.schemas.trace import Trace
 from chuk_math_gym.verifiers.base import Verifier
@@ -114,7 +112,7 @@ class FractionsGymEnv(MathGymEnv):
                     num, den = int(parts[0]), int(parts[1])
                     g = math.gcd(abs(num), abs(den))
                     return f"{num // g}/{den // g}"
-                return frac
+                return str(frac)
             except Exception as e:
                 return f"Error: {e}"
 

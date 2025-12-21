@@ -23,9 +23,9 @@ class StepOperation(str, Enum):
     """
 
     # Core evaluation operations
-    EVAL = "eval"                   # Evaluate a sub-expression numerically
-    SIMPLIFY = "simplify"           # Reduce to canonical form
-    LITERAL = "literal"             # Introduce a literal value
+    EVAL = "eval"  # Evaluate a sub-expression numerically
+    SIMPLIFY = "simplify"  # Reduce to canonical form
+    LITERAL = "literal"  # Introduce a literal value
 
     # Arithmetic operations
     ADD = "add"
@@ -35,9 +35,9 @@ class StepOperation(str, Enum):
     POWER = "power"
 
     # Algebraic rewrites
-    REWRITE = "rewrite"             # Apply a general transformation rule
-    DISTRIBUTE = "distribute"        # a(b+c) -> ab + ac
-    FACTOR = "factor"               # ab + ac -> a(b+c)
+    REWRITE = "rewrite"  # Apply a general transformation rule
+    DISTRIBUTE = "distribute"  # a(b+c) -> ab + ac
+    FACTOR = "factor"  # ab + ac -> a(b+c)
     COMBINE_LIKE = "combine_like_terms"
 
     # Equation operations
@@ -48,8 +48,8 @@ class StepOperation(str, Enum):
     ISOLATE = "isolate"
 
     # Validation operations
-    SUBSTITUTE = "substitute"        # Plug in a value
-    ASSERT = "assert"               # Check a condition holds
+    SUBSTITUTE = "substitute"  # Plug in a value
+    ASSERT = "assert"  # Check a condition holds
 
     # Fraction operations
     REDUCE = "reduce_fraction"
@@ -59,7 +59,7 @@ class StepOperation(str, Enum):
     # Word problem operations
     EXTRACT_VARS = "extract_variables"
     BUILD_EQ = "build_equation"
-    MAP_RESULT = "map_result"        # Map numeric result to answer
+    MAP_RESULT = "map_result"  # Map numeric result to answer
 
 
 class RuleID(str, Enum):
@@ -108,6 +108,7 @@ class StepRef(BaseModel):
         step.input_refs = [StepRef(step_index=0), StepRef(step_index=1)]
         # References outputs from steps 0 and 1
     """
+
     step_index: int = Field(ge=0, description="Index of referenced step")
 
     @property
@@ -126,8 +127,10 @@ class StepRef(BaseModel):
 
 # --- Operation-specific argument types ---
 
+
 class LiteralArgs(BaseModel):
     """Arguments for LITERAL operation (introducing a constant)."""
+
     op_type: Literal["literal"] = "literal"
     value: float = Field(description="The literal value")
     source: Optional[str] = Field(default=None, description="Where this value came from")
@@ -135,6 +138,7 @@ class LiteralArgs(BaseModel):
 
 class ArithmeticArgs(BaseModel):
     """Arguments for arithmetic operations (ADD, SUBTRACT, MULTIPLY, DIVIDE, POWER)."""
+
     op_type: Literal["arithmetic"] = "arithmetic"
     left: float = Field(description="Left operand")
     right: float = Field(description="Right operand")
@@ -143,6 +147,7 @@ class ArithmeticArgs(BaseModel):
 
 class EquationTransformArgs(BaseModel):
     """Arguments for equation transformation operations (ADD_BOTH, SUB_BOTH, etc.)."""
+
     op_type: Literal["equation"] = "equation"
     value: Union[int, float, str] = Field(description="Value applied to both sides")
     variable: str = Field(default="x", description="Variable being solved for")
@@ -150,6 +155,7 @@ class EquationTransformArgs(BaseModel):
 
 class FractionArgs(BaseModel):
     """Arguments for fraction operations."""
+
     op_type: Literal["fraction"] = "fraction"
     numerator: Optional[int] = Field(default=None)
     denominator: Optional[int] = Field(default=None)
@@ -159,6 +165,7 @@ class FractionArgs(BaseModel):
 
 class RewriteArgs(BaseModel):
     """Arguments for algebraic rewrite operations."""
+
     op_type: Literal["rewrite"] = "rewrite"
     from_expr: str = Field(description="Expression before rewrite")
     to_expr: str = Field(description="Expression after rewrite")
@@ -166,6 +173,7 @@ class RewriteArgs(BaseModel):
 
 class SubstitutionArgs(BaseModel):
     """Arguments for substitution operations."""
+
     op_type: Literal["substitution"] = "substitution"
     variable: str = Field(description="Variable being substituted")
     value: float = Field(description="Value to substitute")
@@ -173,6 +181,7 @@ class SubstitutionArgs(BaseModel):
 
 class EmptyArgs(BaseModel):
     """For operations that don't need specific arguments."""
+
     op_type: Literal["empty"] = "empty"
 
 
@@ -187,7 +196,7 @@ OperationArgs = Annotated[
         SubstitutionArgs,
         EmptyArgs,
     ],
-    Field(discriminator="op_type")
+    Field(discriminator="op_type"),
 ]
 
 
@@ -219,32 +228,21 @@ class Step(BaseModel):
     after_state: str = Field(description="Expression/state after this step")
 
     # Operation details - typed!
-    rule_id: Optional[RuleID] = Field(
-        default=None,
-        description="Specific rule applied"
-    )
+    rule_id: Optional[RuleID] = Field(default=None, description="Specific rule applied")
     args: Optional[OperationArgs] = Field(
-        default=None,
-        description="Operation-specific arguments (typed)"
+        default=None, description="Operation-specific arguments (typed)"
     )
 
     # Type-safe step references
-    input_refs: list[StepRef] = Field(
-        default_factory=list,
-        description="References to input steps"
-    )
+    input_refs: list[StepRef] = Field(default_factory=list, description="References to input steps")
 
     # Output value
     output_value: float = Field(description="Numeric value of output")
 
     # Metadata
-    difficulty_cost: float = Field(
-        default=1.0,
-        description="Relative difficulty/cost of this step"
-    )
+    difficulty_cost: float = Field(default=1.0, description="Relative difficulty/cost of this step")
     common_mistake_here: Optional[str] = Field(
-        default=None,
-        description="Common error type at this step"
+        default=None, description="Common error type at this step"
     )
 
     # --- Computed properties for backward compatibility ---
@@ -304,14 +302,12 @@ class Trace(BaseModel):
 
     # Checkpoints for partial credit / reward shaping
     checkpoints: list[int] = Field(
-        default_factory=list,
-        description="Step indices that are key milestones"
+        default_factory=list, description="Step indices that are key milestones"
     )
 
     # Final answer reference
     final_step_index: int = Field(
-        default=-1,
-        description="Index of final answer step (-1 means last step)"
+        default=-1, description="Index of final answer step (-1 means last step)"
     )
 
     @model_validator(mode="after")
@@ -363,12 +359,7 @@ class Trace(BaseModel):
 
     # --- Methods ---
 
-    def verify_step(
-        self,
-        step_index: int,
-        candidate_value: float,
-        tolerance: float = 1e-9
-    ) -> bool:
+    def verify_step(self, step_index: int, candidate_value: float, tolerance: float = 1e-9) -> bool:
         """Verify a single step's output."""
         if step_index < 0 or step_index >= len(self.steps):
             raise IndexError(f"Step index {step_index} out of range")

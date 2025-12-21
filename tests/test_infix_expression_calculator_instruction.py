@@ -1,7 +1,10 @@
 import pytest
 import json
 from unittest.mock import patch
-from chuk_math_gym.compiler.instructions.infix_expression_calculator_instruction import InfixExpressionCalculatorInstruction
+from chuk_math_gym.compiler.instructions.infix_expression_calculator_instruction import (
+    InfixExpressionCalculatorInstruction,
+)
+
 
 @pytest.fixture
 def setup_instruction():
@@ -15,15 +18,20 @@ def setup_instruction():
             "right": {
                 "left": {"value": 10.0, "type": "Literal"},
                 "operator": {"type": "MINUS", "value": "-"},
-                "right": {"value": -4.5, "type": "Literal"}
-            }
+                "right": {"value": -4.5, "type": "Literal"},
+            },
         },
-        "type": "BinaryExpression"
+        "type": "BinaryExpression",
     }
     return InfixExpressionCalculatorInstruction(ast=ast, tokens=[])
 
-@patch.object(InfixExpressionCalculatorInstruction, 'get_random_instruction', return_value="Calculate 3 + 5 * (10 - -4.5) and show the result")
-@patch.object(InfixExpressionCalculatorInstruction, 'safe_eval', return_value=75.5)
+
+@patch.object(
+    InfixExpressionCalculatorInstruction,
+    "get_random_instruction",
+    return_value="Calculate 3 + 5 * (10 - -4.5) and show the result",
+)
+@patch.object(InfixExpressionCalculatorInstruction, "safe_eval", return_value=75.5)
 def test_to_json(mock_safe_eval, mock_get_instruction, setup_instruction):
     setup_instruction.expression = "3 + 5 * (10 - -4.5)"
     json_output = setup_instruction.emit_json()
@@ -39,8 +47,13 @@ def test_to_json(mock_safe_eval, mock_get_instruction, setup_instruction):
     assert "<final_result>" in actual_output["explanation"]
     assert "</answer>" in actual_output["explanation"]
 
-@patch.object(InfixExpressionCalculatorInstruction, 'get_random_instruction', return_value="Calculate 3 + 5 * (10 - -4.5) and show the result")
-@patch.object(InfixExpressionCalculatorInstruction, 'safe_eval', return_value=75.5)
+
+@patch.object(
+    InfixExpressionCalculatorInstruction,
+    "get_random_instruction",
+    return_value="Calculate 3 + 5 * (10 - -4.5) and show the result",
+)
+@patch.object(InfixExpressionCalculatorInstruction, "safe_eval", return_value=75.5)
 def test_to_jsonl(mock_safe_eval, mock_get_instruction, setup_instruction):
     setup_instruction.expression = "3 + 5 * (10 - -4.5)"
     jsonl_output = setup_instruction.emit_jsonl().strip()
@@ -56,8 +69,13 @@ def test_to_jsonl(mock_safe_eval, mock_get_instruction, setup_instruction):
     assert "<final_result>" in actual_output["explanation"]
     assert "</answer>" in actual_output["explanation"]
 
-@patch.object(InfixExpressionCalculatorInstruction, 'get_random_instruction', return_value="Calculate 3 + 5 * (10 - -4.5) and show the result")
-@patch.object(InfixExpressionCalculatorInstruction, 'safe_eval', return_value=75.5)
+
+@patch.object(
+    InfixExpressionCalculatorInstruction,
+    "get_random_instruction",
+    return_value="Calculate 3 + 5 * (10 - -4.5) and show the result",
+)
+@patch.object(InfixExpressionCalculatorInstruction, "safe_eval", return_value=75.5)
 def test_to_qa(mock_safe_eval, mock_get_instruction, setup_instruction):
     setup_instruction.expression = "3 + 5 * (10 - -4.5)"
     qa_output = setup_instruction.emit_qa().strip()

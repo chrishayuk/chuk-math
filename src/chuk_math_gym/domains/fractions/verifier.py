@@ -10,14 +10,13 @@ Handles verification of fraction answers including:
 import re
 import math
 from fractions import Fraction
-from typing import Optional, Tuple
+from typing import Optional
 
 from chuk_math_gym.schemas.problem import Problem, AnswerType
 from chuk_math_gym.schemas.trace import Trace
 from chuk_math_gym.schemas.verification import (
     VerificationResult,
     ErrorType,
-    ToolCallGrade,
 )
 from chuk_math_gym.verifiers.base import Verifier
 
@@ -233,13 +232,13 @@ class FractionsVerifier(Verifier):
         answer = answer.strip()
 
         # Remove LaTeX wrappers
-        answer = re.sub(r'\\frac\{(\-?\d+)\}\{(\d+)\}', r'\1/\2', answer)
-        answer = re.sub(r'\\\(|\\\)|\\\[|\\\]', '', answer)
+        answer = re.sub(r"\\frac\{(\-?\d+)\}\{(\d+)\}", r"\1/\2", answer)
+        answer = re.sub(r"\\\(|\\\)|\\\[|\\\]", "", answer)
         answer = answer.strip()
 
         try:
             # Try mixed number: "1 1/2" or "1-1/2"
-            mixed_match = re.match(r'^(-?\d+)\s+(\d+)/(\d+)$', answer)
+            mixed_match = re.match(r"^(-?\d+)\s+(\d+)/(\d+)$", answer)
             if mixed_match:
                 whole = int(mixed_match.group(1))
                 num = int(mixed_match.group(2))
@@ -249,7 +248,7 @@ class FractionsVerifier(Verifier):
                 return Fraction(whole * den + num, den)
 
             # Try simple fraction: "3/4"
-            frac_match = re.match(r'^(-?\d+)/(-?\d+)$', answer)
+            frac_match = re.match(r"^(-?\d+)/(-?\d+)$", answer)
             if frac_match:
                 num = int(frac_match.group(1))
                 den = int(frac_match.group(2))
@@ -258,7 +257,7 @@ class FractionsVerifier(Verifier):
                 return Fraction(num, den)
 
             # Try integer
-            int_match = re.match(r'^-?\d+$', answer)
+            int_match = re.match(r"^-?\d+$", answer)
             if int_match:
                 return Fraction(int(answer), 1)
 
@@ -278,7 +277,7 @@ class FractionsVerifier(Verifier):
     def _is_reduced(self, answer: str) -> bool:
         """Check if a fraction answer is in reduced form."""
         # Parse the fraction
-        frac_match = re.match(r'^(-?\d+)/(\d+)$', answer.strip())
+        frac_match = re.match(r"^(-?\d+)/(\d+)$", answer.strip())
         if not frac_match:
             # Integer or other format - considered reduced
             return True
@@ -305,7 +304,7 @@ class FractionsVerifier(Verifier):
 
         # Check for denominator error (same numerator, wrong denominator)
         # This requires parsing the original string
-        frac_match = re.match(r'^(-?\d+)/(\d+)$', candidate_str.strip())
+        frac_match = re.match(r"^(-?\d+)/(\d+)$", candidate_str.strip())
         if frac_match:
             cand_num = int(frac_match.group(1))
             exp_num = expected.numerator
@@ -327,8 +326,16 @@ class FractionsVerifier(Verifier):
         actual: Fraction,
     ) -> str:
         """Generate error message."""
-        exp_str = f"{expected.numerator}/{expected.denominator}" if expected.denominator != 1 else str(expected.numerator)
-        act_str = f"{actual.numerator}/{actual.denominator}" if actual.denominator != 1 else str(actual.numerator)
+        exp_str = (
+            f"{expected.numerator}/{expected.denominator}"
+            if expected.denominator != 1
+            else str(expected.numerator)
+        )
+        act_str = (
+            f"{actual.numerator}/{actual.denominator}"
+            if actual.denominator != 1
+            else str(actual.numerator)
+        )
 
         messages = {
             ErrorType.SIGN_ERROR: f"Sign error: expected {exp_str}, got {act_str}",

@@ -4,8 +4,6 @@ Linear Equations Gym environment.
 Implements the MathGymEnv interface for linear equation problems.
 """
 
-from typing import Optional
-
 from chuk_math_gym.schemas.problem import Problem, DifficultyLevel, ToolPolicy
 from chuk_math_gym.schemas.trace import Trace
 from chuk_math_gym.verifiers.base import Verifier
@@ -94,8 +92,6 @@ class LinearEquationsGymEnv(MathGymEnv):
         - multiply_both: Multiply both sides by a value
         - divide_both: Divide both sides by a value
         """
-        import re
-        from fractions import Fraction
 
         if tool_name == "solve":
             # Simple linear equation solver
@@ -108,6 +104,7 @@ class LinearEquationsGymEnv(MathGymEnv):
                     # Extract coefficient and constant from left side
                     # This is a simplified parser
                     return f"x = {args.get('solution', 'unknown')}"
+                return "Error: Invalid equation format"
             except Exception as e:
                 return f"Error: {e}"
 
@@ -152,8 +149,8 @@ class LinearEquationsGymEnv(MathGymEnv):
             try:
                 # Safe evaluation using ast.literal_eval won't work for math
                 # Use a simple recursive descent parser instead of eval
-                result = self._safe_eval_expression(expression)
-                return str(result)
+                eval_result = self._safe_eval_expression(expression)
+                return str(eval_result)
             except Exception as e:
                 return f"Error: {e}"
 
@@ -214,7 +211,7 @@ class LinearEquationsGymEnv(MathGymEnv):
                 raise ValueError(f"Unsupported node type: {type(node)}")
 
         try:
-            tree = ast.parse(expression, mode='eval')
+            tree = ast.parse(expression, mode="eval")
             return float(_eval(tree))
         except SyntaxError as e:
             raise ValueError(f"Invalid expression: {e}")

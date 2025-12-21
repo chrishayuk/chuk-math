@@ -6,7 +6,6 @@ that can be verified step-by-step.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any
 
 from chuk_math_gym.schemas.problem import Problem
 from chuk_math_gym.schemas.trace import Trace

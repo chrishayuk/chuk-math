@@ -5,9 +5,8 @@ Strategies determine how to adjust difficulty based on learner performance.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict
 from dataclasses import dataclass, field
-from enum import Enum
 
 from chuk_math_gym.schemas.problem import DomainType, DifficultyLevel
 
@@ -173,7 +172,7 @@ class LinearStrategy(CurriculumStrategy):
             return False
 
         # Check last N scores
-        recent = metrics.recent_scores[-self.correct_to_advance:]
+        recent = metrics.recent_scores[-self.correct_to_advance :]
         if len(recent) < self.correct_to_advance:
             return False
 
@@ -188,7 +187,7 @@ class LinearStrategy(CurriculumStrategy):
         if not metrics.recent_scores:
             return False
 
-        recent = metrics.recent_scores[-self.wrong_to_retreat:]
+        recent = metrics.recent_scores[-self.wrong_to_retreat :]
         if len(recent) < self.wrong_to_retreat:
             return False
 

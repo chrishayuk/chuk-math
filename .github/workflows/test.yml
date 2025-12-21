@@ -14,8 +14,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        python-version: ["3.11", "3.12"]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
     - uses: actions/checkout@v4
@@ -38,9 +38,13 @@ jobs:
         uv run ruff check src tests
         uv run ruff format --check src tests
 
+    - name: Run type checking
+      run: |
+        uv run mypy src || echo "Type check found issues (non-blocking)"
+
     - name: Run tests with coverage
       run: |
-        PYTHONPATH=src uv run pytest tests/ -v --cov=src/chuk_math_gym --cov-report=term --cov-report=xml
+        uv run pytest tests/ -v --cov=src/chuk_math_gym --cov-report=term --cov-report=xml --cov-report=html
 
     - name: Upload coverage reports
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
@@ -50,3 +54,17 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
+
+    - name: Check coverage threshold
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
+      run: |
+        uv run python -c "
+        import xml.etree.ElementTree as ET
+        tree = ET.parse('coverage.xml')
+        root = tree.getroot()
+        coverage = float(root.attrib['line-rate']) * 100
+        print(f'Coverage: {coverage:.2f}%')
+        if coverage < 70:
+            print(f'Coverage {coverage:.2f}% is below 70% threshold')
+            exit(1)
+        "

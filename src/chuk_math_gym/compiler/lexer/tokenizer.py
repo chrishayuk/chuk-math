@@ -1,17 +1,20 @@
 import re
-from typing import List
-from chuk_math_gym.compiler.lexer.token_type import TokenType  
+from typing import List, Optional
+
 from chuk_math_gym.compiler.lexer.token import Token
+from chuk_math_gym.compiler.lexer.token_type import TokenType
+
 
 class TokenizationError(Exception):
     pass
+
 
 class Tokenizer:
     def __init__(self, input_string: str):
         self.input_string = input_string
         self.current_pos = 0
         self.length = len(input_string)
-        self.tokens = []  # This list will store tokens as they are created
+        self.tokens: List[Token] = []  # This list will store tokens as they are created
 
     def tokenize(self) -> List[Token]:
         # loop to the end
@@ -33,19 +36,21 @@ class Tokenizer:
                     char = self.input_string[self.current_pos]
 
                     # unexpected character
-                    raise TokenizationError(f"Unexpected character: {char} at position {self.current_pos}")
-        
+                    raise TokenizationError(
+                        f"Unexpected character: {char} at position {self.current_pos}"
+                    )
+
         # return tokens
         return self.tokens
 
-    def get_next_token(self) -> Token:
+    def get_next_token(self) -> Optional[Token]:
         # skip whitespace
         self.skip_whitespace()
 
         # check if we're at the end
         if self.current_pos >= self.length:
             return None
-        
+
         # types of tokens
         token_methods = [
             self.get_number,
@@ -54,7 +59,7 @@ class Tokenizer:
             self.get_identifier_or_function,
         ]
 
-        # loop through the methods
+        # loop through the methods
         for method in token_methods:
             # check the type of token method
             token = method()
@@ -63,17 +68,17 @@ class Tokenizer:
             if token:
                 # return the token
                 return token
-            
+
         # no token
         return None
 
-    def get_number(self) -> Token:
+    def get_number(self) -> Optional[Token]:
         # check for a number using regex
-        number_match = re.match(r'\d+(\.\d*)?', self.input_string[self.current_pos:])
+        number_match = re.match(r"\d+(\.\d*)?", self.input_string[self.current_pos :])
 
         # check for a match
         if number_match:
-            # get the number
+            # get the number
             number_str = number_match.group(0)
             self.current_pos += len(number_str)
 
@@ -87,25 +92,25 @@ class Tokenizer:
                 raise TokenizationError(f"Invalid number literal: {number_str}")
         return None
 
-    def get_operator(self) -> Token:
+    def get_operator(self) -> Optional[Token]:
         # operator list
         operators = {
-            '+': TokenType.PLUS,
-            '-': TokenType.MINUS,
-            '*': TokenType.MUL,
-            '/': TokenType.DIV,
-            '^': TokenType.POW,
-            '=': TokenType.EQ,
-            '==': TokenType.EQ,
-            '!=': TokenType.NE,
-            '<>': TokenType.NE,
-            '<=': TokenType.LE,
-            '<': TokenType.LT,
-            '>=': TokenType.GE,
-            '>': TokenType.GT,
-            '&&': TokenType.AND,
-            '||': TokenType.OR,
-            '!': TokenType.NOT
+            "+": TokenType.PLUS,
+            "-": TokenType.MINUS,
+            "*": TokenType.MUL,
+            "/": TokenType.DIV,
+            "^": TokenType.POW,
+            "=": TokenType.EQ,
+            "==": TokenType.EQ,
+            "!=": TokenType.NE,
+            "<>": TokenType.NE,
+            "<=": TokenType.LE,
+            "<": TokenType.LT,
+            ">=": TokenType.GE,
+            ">": TokenType.GT,
+            "&&": TokenType.AND,
+            "||": TokenType.OR,
+            "!": TokenType.NOT,
         }
 
         # loop through the operators
@@ -117,21 +122,20 @@ class Tokenizer:
 
                 # return the token
                 return Token(token_type, op, self.current_pos - len(op))
-            
+
         # no operators
         return None
 
-
-    def get_punctuation(self) -> Token:
+    def get_punctuation(self) -> Optional[Token]:
         # check for punctuation
         punctuations = {
-            ',': TokenType.COMMA,
-            ':': TokenType.COLON,
-            ';': TokenType.SEMI,
-            '(': TokenType.LPAREN,
-            ')': TokenType.RPAREN,
-            '$': TokenType.DOLLAR,
-            '%': TokenType.PERCENT
+            ",": TokenType.COMMA,
+            ":": TokenType.COLON,
+            ";": TokenType.SEMI,
+            "(": TokenType.LPAREN,
+            ")": TokenType.RPAREN,
+            "$": TokenType.DOLLAR,
+            "%": TokenType.PERCENT,
         }
 
         # check if we have puncatuation
@@ -144,13 +148,15 @@ class Tokenizer:
 
             # return the punctuation
             return Token(punctuations[value], value, self.current_pos - 1)
-        
+
         # no punctuation
         return None
 
-    def get_identifier_or_function(self) -> Token:
+    def get_identifier_or_function(self) -> Optional[Token]:
         # check for an identifier or function using regex
-        identifier_match = re.match(r'[A-Za-z_][A-Za-z0-9_]*', self.input_string[self.current_pos:])
+        identifier_match = re.match(
+            r"[A-Za-z_][A-Za-z0-9_]*", self.input_string[self.current_pos :]
+        )
 
         # check for a match
         if identifier_match:
@@ -159,17 +165,17 @@ class Tokenizer:
             self.current_pos += len(identifier)
 
             # Look ahead to see if the next character is an opening parenthesis
-            if self.current_pos < self.length and self.input_string[self.current_pos] == '(':
+            if self.current_pos < self.length and self.input_string[self.current_pos] == "(":
                 # return the functiontoken
                 return Token(TokenType.FUNCTION, identifier, self.current_pos - len(identifier))
-            
+
             # return the identifier token
             return Token(TokenType.IDENTIFIER, identifier, self.current_pos - len(identifier))
-        
+
         # no tokens
         return None
 
-    def skip_whitespace(self):
+    def skip_whitespace(self) -> None:
         # skip past whitespace
         while self.current_pos < self.length and self.input_string[self.current_pos].isspace():
             self.current_pos += 1

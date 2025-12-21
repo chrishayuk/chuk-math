@@ -34,19 +34,21 @@ from chuk_math_gym.schemas.trace import (
 
 class EquationType(str, Enum):
     """Types of linear equations."""
-    ONE_STEP_ADD = "one_step_add"       # x + a = b
-    ONE_STEP_SUB = "one_step_sub"       # x - a = b
-    ONE_STEP_MUL = "one_step_mul"       # ax = b
-    ONE_STEP_DIV = "one_step_div"       # x/a = b
-    TWO_STEP = "two_step"               # ax + b = c
-    VARIABLE_BOTH_SIDES = "var_both"    # ax + b = cx + d
-    DISTRIBUTION = "distribution"        # a(x + b) = c
-    FRACTIONAL = "fractional"           # x/a + b = c
+
+    ONE_STEP_ADD = "one_step_add"  # x + a = b
+    ONE_STEP_SUB = "one_step_sub"  # x - a = b
+    ONE_STEP_MUL = "one_step_mul"  # ax = b
+    ONE_STEP_DIV = "one_step_div"  # x/a = b
+    TWO_STEP = "two_step"  # ax + b = c
+    VARIABLE_BOTH_SIDES = "var_both"  # ax + b = cx + d
+    DISTRIBUTION = "distribution"  # a(x + b) = c
+    FRACTIONAL = "fractional"  # x/a + b = c
 
 
 @dataclass
 class LinearEquation:
     """Represents a linear equation ax + b = c or ax + b = cx + d."""
+
     # Left side: a*x + b
     a: Fraction  # coefficient of x on left
     b: Fraction  # constant on left
@@ -137,21 +139,33 @@ LINEAR_EQ_DIFFICULTY_CONFIG = {
         "positive_only": False,
     },
     DifficultyLevel.HARD: {
-        "types": [EquationType.TWO_STEP, EquationType.VARIABLE_BOTH_SIDES, EquationType.DISTRIBUTION],
+        "types": [
+            EquationType.TWO_STEP,
+            EquationType.VARIABLE_BOTH_SIDES,
+            EquationType.DISTRIBUTION,
+        ],
         "max_coeff": 20,
         "max_const": 200,
         "integer_solutions": False,
         "positive_only": False,
     },
     DifficultyLevel.PRETTY_HARD: {
-        "types": [EquationType.VARIABLE_BOTH_SIDES, EquationType.DISTRIBUTION, EquationType.FRACTIONAL],
+        "types": [
+            EquationType.VARIABLE_BOTH_SIDES,
+            EquationType.DISTRIBUTION,
+            EquationType.FRACTIONAL,
+        ],
         "max_coeff": 30,
         "max_const": 500,
         "integer_solutions": False,
         "positive_only": False,
     },
     DifficultyLevel.VERY_HARD: {
-        "types": [EquationType.DISTRIBUTION, EquationType.FRACTIONAL, EquationType.VARIABLE_BOTH_SIDES],
+        "types": [
+            EquationType.DISTRIBUTION,
+            EquationType.FRACTIONAL,
+            EquationType.VARIABLE_BOTH_SIDES,
+        ],
         "max_coeff": 50,
         "max_const": 1000,
         "integer_solutions": False,
@@ -270,10 +284,7 @@ class LinearEquationsGenerator:
             else:
                 a = self._rand_int(1, max_const, positive)
                 b = self._rand_int(1, max_const, positive)
-            return LinearEquation(
-                a=Fraction(1), b=Fraction(a),
-                c=Fraction(0), d=Fraction(b)
-            )
+            return LinearEquation(a=Fraction(1), b=Fraction(a), c=Fraction(0), d=Fraction(b))
 
         elif eq_type == EquationType.ONE_STEP_SUB:
             # x - a = b, solution: x = b + a
@@ -284,10 +295,7 @@ class LinearEquationsGenerator:
             else:
                 a = self._rand_int(1, max_const, positive)
                 b = self._rand_int(-max_const, max_const, False)
-            return LinearEquation(
-                a=Fraction(1), b=Fraction(-a),
-                c=Fraction(0), d=Fraction(b)
-            )
+            return LinearEquation(a=Fraction(1), b=Fraction(-a), c=Fraction(0), d=Fraction(b))
 
         elif eq_type == EquationType.ONE_STEP_MUL:
             # ax = b, solution: x = b/a
@@ -298,10 +306,7 @@ class LinearEquationsGenerator:
             else:
                 a = self._rand_int(2, max_coeff, True)
                 b = self._rand_int(1, max_const, positive)
-            return LinearEquation(
-                a=Fraction(a), b=Fraction(0),
-                c=Fraction(0), d=Fraction(b)
-            )
+            return LinearEquation(a=Fraction(a), b=Fraction(0), c=Fraction(0), d=Fraction(b))
 
         elif eq_type == EquationType.ONE_STEP_DIV:
             # x/a = b, solution: x = ab
@@ -310,10 +315,7 @@ class LinearEquationsGenerator:
                 b = self._rand_int(1, max_const // a, positive)
             else:
                 b = self._rand_int(1, max_const, positive)
-            return LinearEquation(
-                a=Fraction(1, a), b=Fraction(0),
-                c=Fraction(0), d=Fraction(b)
-            )
+            return LinearEquation(a=Fraction(1, a), b=Fraction(0), c=Fraction(0), d=Fraction(b))
 
         elif eq_type == EquationType.TWO_STEP:
             # ax + b = c, solution: x = (c-b)/a
@@ -326,10 +328,7 @@ class LinearEquationsGenerator:
                 a = self._rand_int(2, max_coeff, True)
                 b = self._rand_int(-max_const, max_const, False)
                 c = self._rand_int(-max_const, max_const, False)
-            return LinearEquation(
-                a=Fraction(a), b=Fraction(b),
-                c=Fraction(0), d=Fraction(c)
-            )
+            return LinearEquation(a=Fraction(a), b=Fraction(b), c=Fraction(0), d=Fraction(c))
 
         elif eq_type == EquationType.VARIABLE_BOTH_SIDES:
             # ax + b = cx + d, solution: x = (d-b)/(a-c)
@@ -346,10 +345,7 @@ class LinearEquationsGenerator:
                     c = a + 1  # Ensure different coefficients
                 b = self._rand_int(-max_const, max_const, False)
                 d = self._rand_int(-max_const, max_const, False)
-            return LinearEquation(
-                a=Fraction(a), b=Fraction(b),
-                c=Fraction(c), d=Fraction(d)
-            )
+            return LinearEquation(a=Fraction(a), b=Fraction(b), c=Fraction(c), d=Fraction(d))
 
         elif eq_type == EquationType.DISTRIBUTION:
             # a(x + b) = c => ax + ab = c
@@ -362,10 +358,7 @@ class LinearEquationsGenerator:
                 a = self._rand_int(2, max_coeff, True)
                 b = self._rand_int(-max_const, max_const, False)
                 c = self._rand_int(-max_const, max_const, False)
-            return LinearEquation(
-                a=Fraction(a), b=Fraction(a * b),
-                c=Fraction(0), d=Fraction(c)
-            )
+            return LinearEquation(a=Fraction(a), b=Fraction(a * b), c=Fraction(0), d=Fraction(c))
 
         else:  # FRACTIONAL
             # x/a + b = c
@@ -377,16 +370,13 @@ class LinearEquationsGenerator:
             else:
                 b = self._rand_int(-max_const, max_const, False)
                 c = self._rand_int(-max_const, max_const, False)
-            return LinearEquation(
-                a=Fraction(1, a), b=Fraction(b),
-                c=Fraction(0), d=Fraction(c)
-            )
+            return LinearEquation(a=Fraction(1, a), b=Fraction(b), c=Fraction(0), d=Fraction(c))
 
     def _rand_int(self, low: int, high: int, positive: bool) -> int:
         """Generate random integer."""
         if positive:
-            return self._rng.randint(max(1, low), max(1, high))
-        return self._rng.randint(low, high)
+            return int(self._rng.randint(max(1, low), max(1, high)))
+        return int(self._rng.randint(low, high))
 
     def _generate_trace(self, equation: LinearEquation, problem_id: str) -> Trace:
         """Generate solution trace for a linear equation."""
@@ -401,17 +391,19 @@ class LinearEquationsGenerator:
         if equation.c != 0:
             # Subtract cx from both sides
             new_a = equation.a - equation.c
-            steps.append(Step(
-                index=step_idx,
-                operation=StepOperation.SUB_BOTH,
-                before_state=f"Subtract {equation.c}x from both sides",
-                after_state=f"{new_a}x + {equation.b} = {equation.d}",
-                rule_id=RuleID.COLLECT_VARIABLES,
-                args=EquationTransformArgs(value=f"{equation.c}x", variable="x"),
-                input_refs=[],
-                output_value=float(new_a),
-                difficulty_cost=1.0,
-            ))
+            steps.append(
+                Step(
+                    index=step_idx,
+                    operation=StepOperation.SUB_BOTH,
+                    before_state=f"Subtract {equation.c}x from both sides",
+                    after_state=f"{new_a}x + {equation.b} = {equation.d}",
+                    rule_id=RuleID.COLLECT_VARIABLES,
+                    args=EquationTransformArgs(value=f"{equation.c}x", variable="x"),
+                    input_refs=[],
+                    output_value=float(new_a),
+                    difficulty_cost=1.0,
+                )
+            )
             step_idx += 1
             current_a = new_a
         else:
@@ -428,18 +420,20 @@ class LinearEquationsGenerator:
                 op = StepOperation.ADD_BOTH
                 desc = f"Add {abs(equation.b)} to both sides"
 
-            input_refs = [StepRef(step_index=step_idx-1)] if step_idx > 0 else []
-            steps.append(Step(
-                index=step_idx,
-                operation=op,
-                before_state=desc,
-                after_state=f"{current_a}x = {new_d}",
-                rule_id=RuleID.MOVE_CONSTANT,
-                args=EquationTransformArgs(value=abs(equation.b), variable="x"),
-                input_refs=input_refs,
-                output_value=float(new_d),
-                difficulty_cost=0.75,
-            ))
+            input_refs = [StepRef(step_index=step_idx - 1)] if step_idx > 0 else []
+            steps.append(
+                Step(
+                    index=step_idx,
+                    operation=op,
+                    before_state=desc,
+                    after_state=f"{current_a}x = {new_d}",
+                    rule_id=RuleID.MOVE_CONSTANT,
+                    args=EquationTransformArgs(value=float(abs(equation.b)), variable="x"),
+                    input_refs=input_refs,
+                    output_value=float(new_d),
+                    difficulty_cost=0.75,
+                )
+            )
             step_idx += 1
             current_d = new_d
         else:
@@ -447,33 +441,39 @@ class LinearEquationsGenerator:
 
         # Step 3: Divide by coefficient (if needed)
         solution = equation.solution
+        if solution is None:
+            raise ValueError("Equation has no unique solution")
 
         if current_a != 1:
-            input_refs = [StepRef(step_index=step_idx-1)] if step_idx > 0 else []
-            steps.append(Step(
-                index=step_idx,
-                operation=StepOperation.DIV_BOTH,
-                before_state=f"Divide both sides by {current_a}",
-                after_state=f"x = {solution}",
-                rule_id=RuleID.ISOLATE_VARIABLE,
-                args=EquationTransformArgs(value=float(current_a), variable="x"),
-                input_refs=input_refs,
-                output_value=float(solution),
-                difficulty_cost=0.75,
-            ))
+            input_refs = [StepRef(step_index=step_idx - 1)] if step_idx > 0 else []
+            steps.append(
+                Step(
+                    index=step_idx,
+                    operation=StepOperation.DIV_BOTH,
+                    before_state=f"Divide both sides by {current_a}",
+                    after_state=f"x = {solution}",
+                    rule_id=RuleID.ISOLATE_VARIABLE,
+                    args=EquationTransformArgs(value=float(current_a), variable="x"),
+                    input_refs=input_refs,
+                    output_value=float(solution),
+                    difficulty_cost=0.75,
+                )
+            )
         else:
-            input_refs = [StepRef(step_index=step_idx-1)] if step_idx > 0 else []
-            steps.append(Step(
-                index=step_idx,
-                operation=StepOperation.ISOLATE,
-                before_state=f"x = {current_d}",
-                after_state=f"x = {solution}",
-                rule_id=RuleID.ISOLATE_VARIABLE,
-                args=EquationTransformArgs(value=float(current_d), variable="x"),
-                input_refs=input_refs,
-                output_value=float(solution),
-                difficulty_cost=0.25,
-            ))
+            input_refs = [StepRef(step_index=step_idx - 1)] if step_idx > 0 else []
+            steps.append(
+                Step(
+                    index=step_idx,
+                    operation=StepOperation.ISOLATE,
+                    before_state=f"x = {current_d}",
+                    after_state=f"x = {solution}",
+                    rule_id=RuleID.ISOLATE_VARIABLE,
+                    args=EquationTransformArgs(value=float(current_d), variable="x"),
+                    input_refs=input_refs,
+                    output_value=float(solution),
+                    difficulty_cost=0.25,
+                )
+            )
 
         return Trace(
             problem_id=problem_id,
@@ -505,7 +505,4 @@ class LinearEquationsGenerator:
         if start_seed is None:
             start_seed = random.randint(0, 2**31 - 1)
 
-        return [
-            self.generate(seed=start_seed + i, difficulty=difficulty)
-            for i in range(count)
-        ]
+        return [self.generate(seed=start_seed + i, difficulty=difficulty) for i in range(count)]

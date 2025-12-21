@@ -4,8 +4,6 @@ Arithmetic Gym environment.
 Implements the MathGymEnv interface for arithmetic problems.
 """
 
-from typing import Optional
-
 from chuk_math_gym.schemas.problem import (
     Problem,
     DifficultyLevel,

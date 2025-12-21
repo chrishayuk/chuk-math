@@ -1,140 +1,259 @@
-# Introduction
-This is an experimental compiler that can be used to generate math datasets.
-At a high level the various cli's provided can perform the following tasks..
+# chuk-math-gym
 
-- generate synthetic data consisting of arithmetic expressions
-- generate arithmetic expressions
-- tokenize arithmetic expressions
-- parse artithmetic expressions into an Abstract Syntax Tree
-- compile arithmetic expressions
+A verifiable reasoning and tool-use training environment for mathematical problem-solving.
 
-## Examples
-For example, if you wish to generate a jsonl file that generates an expression, generates an abstract syntax tree of the expression, generates a sample arithmetic question for the expression, and some steps for the solving the expression including the answer, you can use the following command
+## Overview
 
-```bash
-uv run main.py "3 + 5 * (10 - 4)" --format jsonl
-```
+chuk-math-gym provides a Gymnasium-style environment for training LLM agents on mathematical reasoning with verifiable rewards. It generates problems with deterministic seeding, produces machine-checkable solution traces, and provides local verification with partial credit.
 
-if you wish to generate an llm prettified version of the questions and explanations, you can run
+### Key Features
 
-```bash
-uv run main.py "3 + 5 * (10 - 4)" --llm "phi4" --format jsonl
-```
+- **Problem Generation**: Deterministic seeding for reproducible problem sets
+- **Solution Traces**: Step-by-step traces with machine-checkable verification
+- **Partial Credit**: Granular scoring based on correct intermediate steps
+- **Gym-style Interface**: Standard `reset()`/`step()` RL environment API
+- **Multiple Domains**: Arithmetic, fractions, and linear equations
+- **Curriculum Learning**: Adaptive difficulty scheduling strategies
 
 ## Installation
-The following outlines how to install the math compiler on your machine
 
-### pip
-If you are using pip, you can perform the following
+### Using uv (recommended)
 
-To install dependencies
+```bash
+pip install uv
+uv sync --reinstall
+```
+
+### Using pip
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## uv
-If you are using uv you should install uv first
+## Quick Start
 
-```bash
-pip install uv
+### Using the Gym Environment
+
+```python
+from chuk_math_gym import MathGymEnv, DomainType, DifficultyLevel
+
+# Create environment for arithmetic problems
+env = MathGymEnv(
+    domain=DomainType.ARITHMETIC,
+    difficulty=DifficultyLevel.EASY
+)
+
+# Reset to get a new problem
+problem = env.reset(seed=42)
+print(f"Problem: {problem.prompt}")
+print(f"Expression: {problem.expression}")
+
+# Submit an answer
+result = env.step("42")
+print(f"Correct: {result.correct}")
+print(f"Score: {result.score}")
 ```
 
-and then resync dependencies
+### Domain-Specific Environments
 
-```bash
-uv sync --reinstall
+```python
+from chuk_math_gym.domains.arithmetic import ArithmeticEnv
+from chuk_math_gym.domains.fractions import FractionsEnv
+from chuk_math_gym.domains.linear_equations import LinearEquationsEnv
+
+# Arithmetic environment
+arith_env = ArithmeticEnv(difficulty=DifficultyLevel.MEDIUM)
+problem = arith_env.reset(seed=123)
+
+# Fractions environment
+frac_env = FractionsEnv(difficulty=DifficultyLevel.EASY)
+problem = frac_env.reset(seed=456)
+
+# Linear equations environment
+eq_env = LinearEquationsEnv(difficulty=DifficultyLevel.HARD)
+problem = eq_env.reset(seed=789)
 ```
 
-## Unit Test
-To run unit testing
+### Verifying Solutions
 
-```bash
-pytest
+```python
+from chuk_math_gym.verifiers.arithmetic import ArithmeticVerifier
+from chuk_math_gym.schemas.problem import Problem, DomainType, DifficultyLevel
+
+verifier = ArithmeticVerifier()
+
+# Verify a final answer
+result = verifier.verify_answer(
+    problem=problem,
+    answer="42",
+    gold_answer="42"
+)
+print(f"Correct: {result.correct}, Score: {result.score}")
+
+# Verify a complete trace with partial credit
+trace_result = verifier.verify_trace(problem, trace)
+print(f"Partial credit: {trace_result.score}")
 ```
 
-or
+### Curriculum Learning
+
+```python
+from chuk_math_gym.curriculum import CurriculumScheduler
+from chuk_math_gym.curriculum.strategies import (
+    LinearProgressionStrategy,
+    AdaptiveStrategy,
+    MasteryBasedStrategy
+)
+
+# Create scheduler with adaptive difficulty
+scheduler = CurriculumScheduler(
+    strategy=AdaptiveStrategy(
+        success_threshold=0.8,
+        failure_threshold=0.4
+    )
+)
+
+# Get current difficulty
+difficulty = scheduler.get_difficulty()
+
+# Update based on performance
+scheduler.update(score=0.9, correct=True)
+```
+
+## Project Structure
+
+```
+src/chuk_math_gym/
+├── domains/           # Domain-specific implementations
+│   ├── arithmetic/    # Arithmetic expression problems
+│   ├── fractions/     # Fraction manipulation problems
+│   └── linear_equations/  # Equation solving problems
+├── env/               # Gymnasium environment base
+├── schemas/           # Pydantic models for problems, traces, verification
+├── verifiers/         # Answer and trace verification
+├── trace/             # Solution trace generation
+├── curriculum/        # Difficulty scheduling strategies
+├── generators/        # Problem generation base classes
+├── explanations/      # Step-by-step explanation generation
+├── expression_generator/  # Random expression generation
+└── compiler/          # Expression parsing and compilation
+```
+
+## Difficulty Levels
+
+Problems can be generated at seven difficulty levels:
+
+| Level | Description |
+|-------|-------------|
+| `VERY_EASY` | Simple single-operation problems |
+| `EASY` | Basic problems with small numbers |
+| `PRETTY_EASY` | Slightly more complex expressions |
+| `MEDIUM` | Multi-step problems |
+| `HARD` | Complex expressions with decimals |
+| `PRETTY_HARD` | Challenging multi-operation problems |
+| `VERY_HARD` | Advanced problems with large numbers |
+
+## Testing
+
+Run the test suite:
 
 ```bash
+# Using pytest directly
 uv run pytest
+
+# With coverage
+uv run pytest --cov=src/chuk_math_gym --cov-report=term-missing
+
+# Run all checks (lint + format + tests)
+make check
 ```
 
-## CLI
-The following section describes the CLI tools, namely
+Current test coverage: **96%** with **632 tests**.
 
-- expression generator
-- tokenizer
-- parser
-- compiler
+## CLI Tools
 
 ### Expression Generator
-The expression generator allows you to generate a random expression based on specified difficulty.
-The following will generate a single easy expression
+
+Generate random expressions at specified difficulty:
 
 ```bash
-python expression_generator_cli
+python expression_generator_cli.py --difficulty "medium"
 ```
 
-The following allows you to specify your difficulty setting for the expression
+### Compiler
+
+Compile expressions with step-by-step explanations:
 
 ```bash
-python expression_generator_cli.py --difficulty "easy"
+uv run main.py "3 + 5 * (10 - 4)" --format jsonl
 ```
 
-There are 7 difficulty settings
-
-- "very easy"
-- "easy"
-- "pretty easy"
-- "medium"
-- "hard"
-- "pretty hard"
-- "very hard”
-
-### Tokenizer CLI
-The following shows how to use the tokenizer cli.  The tokenizer cli, accepts a math expression (one that has been generated from the expression generator), and returns it in it's tokenized form.
+With LLM-enhanced explanations:
 
 ```bash
-python tokenizer_cli.py "379 * 85"
+uv run main.py "3 + 5 * (10 - 4)" --llm "phi4" --format jsonl
 ```
 
-### AST CLI
-The following shows how to use the parser (ast cli).  The ast cli, accepts a math expression (one that has been generated from the expression generator), runs it through the tokenizer (similar to the tokenizer cli), and then runs the tokenized version of the expression through the parser to generate an Abstract Syntax Tree (AST).
+### Generate Training Samples
 
 ```bash
-python tokenizer_cli.py "379 * 85"
+# Chat-style samples
+python generate_chat_samples.py -n 5 -d "easy" --llm "granite3.1-dense"
+
+# Verifier training samples
+python generate_verifier_samples.py -n 20 -d "medium"
 ```
 
-### Compiler CLI
-The following shows how to use the arithmetic compiler cl.  The compiler cli, accepts a math expression (one that has been generated from the expression generator), runs it through the tokenizer (similar to the tokenizer cli), and then runs the tokenized version of the expression through the parser to generate an Abstract Syntax Tree (AST).  From the abstract syntax tree, the compiler will generate a natural language instruction from a range of options in a template list, for the specified instruction.  In the example below the compiler cli will use the default infix_expression_calculator_instruction.
+## Schemas
 
-```bash
-python main.py "3 + 5 * (10 - 4)"
+### Problem
+
+```python
+from chuk_math_gym import Problem, DomainType, DifficultyLevel
+
+problem = Problem(
+    id="prob_001",
+    seed=42,
+    domain=DomainType.ARITHMETIC,
+    difficulty=DifficultyLevel.EASY,
+    prompt="Calculate: 3 + 5",
+    expression="3 + 5",
+    gold_answer="8"
+)
 ```
 
-#### using an llm
+### Trace
 
-```bash
-python main.py "3 + 5 * (10 - 4)" --llm "mistral-nemo"
+```python
+from chuk_math_gym import Trace, Step, StepOperation
+
+trace = Trace(
+    problem_id="prob_001",
+    steps=[
+        Step(
+            index=0,
+            operation=StepOperation.ADD,
+            before_state="3 + 5",
+            after_state="8",
+            output_value=8.0
+        )
+    ]
+)
 ```
 
+### Verification Result
 
-### generating chat sample
-```bash
-python generate_chat_samples.py -n 5 -d "very easy" --llm "granite3.1-dense" > chat_samples_medium.jsonl
+```python
+from chuk_math_gym import VerificationResult
+
+result = VerificationResult(
+    correct=True,
+    score=1.0,
+    error_type=None,
+    feedback="Correct answer!"
+)
 ```
 
-### generating verifier sample
-```bash
-python generate_verifier_samples.py -n 20 -d "very easy" --llm "granite3.1-dense" > output/verifier_samples_very_easy.jsonl
-```
+## License
 
-### generating verifier sample
-```bash
-python generate_boxed_verifier_samples.py -n 20 -d "very easy" --llm "granite3.1-dense" > output/boxed_verifier_samples_very_easy.jsonl
-```
-
-
-```bash
-python generate_verifier_samples.py > output/verifier_samples_all.jsonl
-```
+MIT License

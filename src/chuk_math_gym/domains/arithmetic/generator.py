@@ -6,27 +6,26 @@ Problem and Trace objects in the new schema format.
 """
 
 import random
-import re
+from decimal import getcontext
 from typing import Optional, Tuple
-from decimal import Decimal, getcontext
 
-# Set high precision for calculations
-getcontext().prec = 64
+import sympy
 
-from chuk_math_gym.schemas.problem import (
-    Problem,
-    DomainType,
-    DifficultyLevel,
-    AnswerType,
-    ToolPolicy,
-)
-from chuk_math_gym.schemas.trace import Step, Trace, StepOperation
-from chuk_math_gym.trace.ast_trace import ASTTraceGenerator
-
-# Import the expression generator (now part of chuk_math_gym)
 from chuk_math_gym.expression_generator.arithmetic_expression_generator import (
     ArithmeticExpressionGenerator as LegacyGenerator,
 )
+from chuk_math_gym.schemas.problem import (
+    AnswerType,
+    DifficultyLevel,
+    DomainType,
+    Problem,
+    ToolPolicy,
+)
+from chuk_math_gym.schemas.trace import Trace
+from chuk_math_gym.trace.ast_trace import ASTTraceGenerator
+
+# Set high precision for calculations
+getcontext().prec = 64
 
 
 # Difficulty configuration mapping
@@ -207,8 +206,8 @@ class ArithmeticGenerator:
             depth=config["max_depth"],
             operation_count=operation_count,
             numeric_range=(config["min_number"], config["max_number"]),
-            has_decimals=config["allow_decimals"],
-            has_negatives=config["allow_negative"],
+            has_decimals=bool(config["allow_decimals"]),
+            has_negatives=bool(config["allow_negative"]),
             tags=["arithmetic", difficulty.value],
             common_mistakes=self._get_common_mistakes(expression),
         )
@@ -222,7 +221,7 @@ class ArithmeticGenerator:
         """Generate a random expression for the given difficulty."""
         # Map enum to string for expression generator
         difficulty_str = difficulty.value.replace("_", " ")
-        return self._legacy_generator.generate_random_expression(difficulty_str)
+        return str(self._legacy_generator.generate_random_expression(difficulty_str))
 
     def _simple_expression(self, config: dict) -> str:
         """Simple fallback expression generator."""
@@ -240,14 +239,14 @@ class ArithmeticGenerator:
 
         expr = rand_num()
         for _ in range(num_ops):
-            op = self._rng.choice(operators)
+            op: str = self._rng.choice(operators)
             next_num = rand_num()
             # Avoid division by zero
             if op == "/" and next_num in ("0", "-0"):
                 next_num = str(self._rng.randint(1, 10))
             expr = f"{expr} {op} {next_num}"
 
-        return expr
+        return str(expr)
 
     def _evaluate_expression(self, expression: str) -> float:
         """
@@ -256,7 +255,6 @@ class ArithmeticGenerator:
         Uses sympy for safe evaluation, with AST-based fallback.
         """
         try:
-            import sympy
             result = sympy.sympify(expression).evalf()
             return float(result)
         except (ValueError, TypeError, AttributeError, sympy.SympifyError):
@@ -301,7 +299,7 @@ class ArithmeticGenerator:
             else:
                 raise ValueError(f"Unsupported: {type(node)}")
 
-        tree = ast.parse(expression, mode='eval')
+        tree = ast.parse(expression, mode="eval")
         return float(_eval(tree))
 
     def _get_common_mistakes(self, expression: str) -> list[str]:
@@ -343,7 +341,4 @@ class ArithmeticGenerator:
         if start_seed is None:
             start_seed = random.randint(0, 2**31 - 1)
 
-        return [
-            self.generate(seed=start_seed + i, difficulty=difficulty)
-            for i in range(count)
-        ]
+        return [self.generate(seed=start_seed + i, difficulty=difficulty) for i in range(count)]

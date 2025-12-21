@@ -12,7 +12,6 @@ from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, Field
 import hashlib
-import json
 
 
 class DomainType(str, Enum):
@@ -53,18 +52,18 @@ class DifficultyLevel(str, Enum):
 class AnswerType(str, Enum):
     """How the answer should be verified."""
 
-    EXACT = "exact"           # Must match exactly (integers, simple fractions)
-    NUMERIC = "numeric"       # Numeric with tolerance (decimals)
-    EXPRESSION = "expression" # Symbolically equivalent (algebra)
-    CHOICE = "choice"         # Multiple choice selection
+    EXACT = "exact"  # Must match exactly (integers, simple fractions)
+    NUMERIC = "numeric"  # Numeric with tolerance (decimals)
+    EXPRESSION = "expression"  # Symbolically equivalent (algebra)
+    CHOICE = "choice"  # Multiple choice selection
 
 
 class ToolPolicy(str, Enum):
     """Policy for tool usage on this problem."""
 
-    ALLOWED = "allowed"       # Agent may use tools
-    FORBIDDEN = "forbidden"   # Mental math only - no tools
-    REQUIRED = "required"     # Agent must use specific tools
+    ALLOWED = "allowed"  # Agent may use tools
+    FORBIDDEN = "forbidden"  # Mental math only - no tools
+    REQUIRED = "required"  # Agent must use specific tools
 
 
 class Problem(BaseModel):
@@ -100,65 +99,48 @@ class Problem(BaseModel):
     # Content
     prompt: str = Field(description="Natural language question to present")
     expression: Optional[str] = Field(
-        default=None,
-        description="Underlying mathematical expression (if applicable)"
+        default=None, description="Underlying mathematical expression (if applicable)"
     )
 
     # Answer specification
     answer_type: AnswerType = Field(
-        default=AnswerType.NUMERIC,
-        description="How to verify the answer"
+        default=AnswerType.NUMERIC, description="How to verify the answer"
     )
     gold_answer: str = Field(description="Canonical correct answer")
     tolerance: Optional[float] = Field(
-        default=None,
-        description="Numeric tolerance for approximate answers (e.g., 1e-6)"
+        default=None, description="Numeric tolerance for approximate answers (e.g., 1e-6)"
     )
 
     # Tool policy
     tool_policy: ToolPolicy = Field(
-        default=ToolPolicy.ALLOWED,
-        description="Whether tools can be used"
+        default=ToolPolicy.ALLOWED, description="Whether tools can be used"
     )
     allowed_tools: Optional[list[str]] = Field(
-        default=None,
-        description="Specific tools allowed (if tool_policy is ALLOWED)"
+        default=None, description="Specific tools allowed (if tool_policy is ALLOWED)"
     )
     forbidden_tools: Optional[list[str]] = Field(
-        default=None,
-        description="Specific tools forbidden"
+        default=None, description="Specific tools forbidden"
     )
 
     # Difficulty axes (for curriculum learning)
     depth: Optional[int] = Field(
-        default=None,
-        description="Expression nesting depth (e.g., ((a+b)*c) = depth 2)"
+        default=None, description="Expression nesting depth (e.g., ((a+b)*c) = depth 2)"
     )
     operation_count: Optional[int] = Field(
-        default=None,
-        description="Number of operations in the expression"
+        default=None, description="Number of operations in the expression"
     )
     numeric_range: Optional[tuple[float, float]] = Field(
-        default=None,
-        description="Range of numbers used (min, max)"
+        default=None, description="Range of numbers used (min, max)"
     )
-    has_decimals: Optional[bool] = Field(
-        default=None,
-        description="Whether decimals are involved"
-    )
+    has_decimals: Optional[bool] = Field(default=None, description="Whether decimals are involved")
     has_negatives: Optional[bool] = Field(
-        default=None,
-        description="Whether negative numbers are involved"
+        default=None, description="Whether negative numbers are involved"
     )
 
     # Metadata
-    tags: list[str] = Field(
-        default_factory=list,
-        description="Searchable tags for filtering"
-    )
+    tags: list[str] = Field(default_factory=list, description="Searchable tags for filtering")
     common_mistakes: list[str] = Field(
-        default_factory=list,
-        description="Expected error types for this problem"
+        default_factory=list, description="Expected error types for this problem"
     )
 
     @classmethod

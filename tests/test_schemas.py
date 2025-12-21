@@ -285,11 +285,51 @@ class TestTraceSchema:
     def test_count_operations(self):
         """Test operation counting."""
         steps = [
-            Step(index=0, operation=StepOperation.LITERAL, before_state="3", after_state="3", inputs=[], output="x1", output_value=3.0),
-            Step(index=1, operation=StepOperation.LITERAL, before_state="5", after_state="5", inputs=[], output="x2", output_value=5.0),
-            Step(index=2, operation=StepOperation.ADD, before_state="3+5", after_state="8", inputs=["x1", "x2"], output="x3", output_value=8.0),
-            Step(index=3, operation=StepOperation.LITERAL, before_state="2", after_state="2", inputs=[], output="x4", output_value=2.0),
-            Step(index=4, operation=StepOperation.MULTIPLY, before_state="8*2", after_state="16", inputs=["x3", "x4"], output="x5", output_value=16.0),
+            Step(
+                index=0,
+                operation=StepOperation.LITERAL,
+                before_state="3",
+                after_state="3",
+                inputs=[],
+                output="x1",
+                output_value=3.0,
+            ),
+            Step(
+                index=1,
+                operation=StepOperation.LITERAL,
+                before_state="5",
+                after_state="5",
+                inputs=[],
+                output="x2",
+                output_value=5.0,
+            ),
+            Step(
+                index=2,
+                operation=StepOperation.ADD,
+                before_state="3+5",
+                after_state="8",
+                inputs=["x1", "x2"],
+                output="x3",
+                output_value=8.0,
+            ),
+            Step(
+                index=3,
+                operation=StepOperation.LITERAL,
+                before_state="2",
+                after_state="2",
+                inputs=[],
+                output="x4",
+                output_value=2.0,
+            ),
+            Step(
+                index=4,
+                operation=StepOperation.MULTIPLY,
+                before_state="8*2",
+                after_state="16",
+                inputs=["x3", "x4"],
+                output="x5",
+                output_value=16.0,
+            ),
         ]
 
         trace = Trace(

@@ -28,22 +28,22 @@ class ErrorType(str, Enum):
     - Providing feedback to agents
     """
 
-    NONE = "none"                       # No error (correct answer)
+    NONE = "none"  # No error (correct answer)
 
     # General errors
-    WRONG_ANSWER = "wrong_answer"       # Generic wrong answer
-    INVALID_FORMAT = "invalid_format"   # Could not parse answer
-    INCOMPLETE = "incomplete"           # Partial answer
+    WRONG_ANSWER = "wrong_answer"  # Generic wrong answer
+    INVALID_FORMAT = "invalid_format"  # Could not parse answer
+    INCOMPLETE = "incomplete"  # Partial answer
 
     # Arithmetic errors
-    SIGN_ERROR = "sign_error"           # Wrong sign (e.g., -5 instead of 5)
-    ORDER_OF_OPS = "order_of_operations" # PEMDAS violation
-    DIVISION_ERROR = "division_error"   # Division mistake
-    ROUNDING_ERROR = "rounding_error"   # Close but imprecise
+    SIGN_ERROR = "sign_error"  # Wrong sign (e.g., -5 instead of 5)
+    ORDER_OF_OPS = "order_of_operations"  # PEMDAS violation
+    DIVISION_ERROR = "division_error"  # Division mistake
+    ROUNDING_ERROR = "rounding_error"  # Close but imprecise
 
     # Fraction errors
     WRONG_DENOMINATOR = "wrong_denominator"
-    UNREDUCED = "unreduced_fraction"    # Correct but not simplified
+    UNREDUCED = "unreduced_fraction"  # Correct but not simplified
     NUMERATOR_ERROR = "numerator_error"
 
     # Algebra errors
@@ -68,36 +68,18 @@ class ToolCallGrade(BaseModel):
     """
 
     tool_name: str = Field(description="Name of the tool called")
-    args: ToolCallArgs = Field(
-        default_factory=dict,
-        description="Arguments passed to the tool"
-    )
+    args: ToolCallArgs = Field(default_factory=dict, description="Arguments passed to the tool")
 
     # Validity
-    valid: bool = Field(
-        default=True,
-        description="Arguments were valid for this tool"
-    )
-    error_message: Optional[str] = Field(
-        default=None,
-        description="Error message if invalid"
-    )
+    valid: bool = Field(default=True, description="Arguments were valid for this tool")
+    error_message: Optional[str] = Field(default=None, description="Error message if invalid")
 
     # Efficiency
-    necessary: bool = Field(
-        default=True,
-        description="Call was needed for the solution"
-    )
-    efficient: bool = Field(
-        default=True,
-        description="Call was not redundant or wasteful"
-    )
+    necessary: bool = Field(default=True, description="Call was needed for the solution")
+    efficient: bool = Field(default=True, description="Call was not redundant or wasteful")
 
     # Scoring
-    penalty: float = Field(
-        default=0.0,
-        description="Penalty for this call (0.0 = no penalty)"
-    )
+    penalty: float = Field(default=0.0, description="Penalty for this call (0.0 = no penalty)")
 
     @property
     def is_good_call(self) -> bool:
@@ -127,75 +109,43 @@ class VerificationResult(BaseModel):
 
     # Scoring (0.0 to 1.0)
     score: float = Field(
-        ge=0.0,
-        le=1.0,
-        description="Score from 0.0 (completely wrong) to 1.0 (perfect)"
+        ge=0.0, le=1.0, description="Score from 0.0 (completely wrong) to 1.0 (perfect)"
     )
     partial_credit: float = Field(
-        default=0.0,
-        ge=0.0,
-        le=1.0,
-        description="Credit for correct intermediate steps"
+        default=0.0, ge=0.0, le=1.0, description="Credit for correct intermediate steps"
     )
 
     # Error classification
-    error_type: ErrorType = Field(
-        default=ErrorType.NONE,
-        description="Type of error (if any)"
-    )
+    error_type: ErrorType = Field(default=ErrorType.NONE, description="Type of error (if any)")
     error_message: Optional[str] = Field(
-        default=None,
-        description="Human-readable error description"
+        default=None, description="Human-readable error description"
     )
 
     # Numeric answer details
-    expected: Optional[float] = Field(
-        default=None,
-        description="Expected (gold) answer"
-    )
-    actual: Optional[float] = Field(
-        default=None,
-        description="Actual (candidate) answer"
-    )
+    expected: Optional[float] = Field(default=None, description="Expected (gold) answer")
+    actual: Optional[float] = Field(default=None, description="Actual (candidate) answer")
     tolerance_used: Optional[float] = Field(
-        default=None,
-        description="Tolerance used for comparison"
+        default=None, description="Tolerance used for comparison"
     )
 
     # Step-level details (when trace is verified)
-    steps_correct: Optional[int] = Field(
-        default=None,
-        description="Number of correct steps"
-    )
-    steps_total: Optional[int] = Field(
-        default=None,
-        description="Total number of steps"
-    )
+    steps_correct: Optional[int] = Field(default=None, description="Number of correct steps")
+    steps_total: Optional[int] = Field(default=None, description="Total number of steps")
     first_error_step: Optional[int] = Field(
-        default=None,
-        description="Index of first incorrect step"
+        default=None, description="Index of first incorrect step"
     )
 
     # Tool usage grading
-    tool_calls_made: int = Field(
-        default=0,
-        description="Number of tool calls made"
-    )
-    tool_calls_valid: int = Field(
-        default=0,
-        description="Number of valid tool calls"
-    )
+    tool_calls_made: int = Field(default=0, description="Number of tool calls made")
+    tool_calls_valid: int = Field(default=0, description="Number of valid tool calls")
     tool_calls_efficient: bool = Field(
-        default=True,
-        description="Whether tool usage was efficient overall"
+        default=True, description="Whether tool usage was efficient overall"
     )
     tool_policy_violated: bool = Field(
-        default=False,
-        description="Whether tool policy was violated"
+        default=False, description="Whether tool policy was violated"
     )
     tool_grades: list[ToolCallGrade] = Field(
-        default_factory=list,
-        description="Individual tool call grades"
+        default_factory=list, description="Individual tool call grades"
     )
 
     def to_reward(

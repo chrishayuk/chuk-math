@@ -36,6 +36,7 @@ from chuk_math_gym.schemas.trace import (
 @dataclass
 class FractionValue:
     """Represents a fraction with numerator and denominator."""
+
     numerator: int
     denominator: int
 
@@ -47,7 +48,7 @@ class FractionValue:
     def value(self) -> float:
         return self.numerator / self.denominator
 
-    def reduce(self) -> 'FractionValue':
+    def reduce(self) -> "FractionValue":
         """Return the fraction in lowest terms."""
         gcd = math.gcd(abs(self.numerator), abs(self.denominator))
         num = self.numerator // gcd
@@ -74,7 +75,7 @@ class FractionValue:
         return f"{whole} {remainder}/{abs(self.denominator)}"
 
     @classmethod
-    def from_python_fraction(cls, f: Fraction) -> 'FractionValue':
+    def from_python_fraction(cls, f: Fraction) -> "FractionValue":
         return cls(f.numerator, f.denominator)
 
     def to_python_fraction(self) -> Fraction:
@@ -104,32 +105,55 @@ FRACTION_DIFFICULTY_CONFIG = {
     DifficultyLevel.EASY: {
         "max_denominator": 12,
         "max_numerator": 20,
-        "operations": [FractionProblemType.SIMPLIFY, FractionProblemType.ADD, FractionProblemType.SUBTRACT],
+        "operations": [
+            FractionProblemType.SIMPLIFY,
+            FractionProblemType.ADD,
+            FractionProblemType.SUBTRACT,
+        ],
         "same_denominator": True,
     },
     DifficultyLevel.PRETTY_EASY: {
         "max_denominator": 12,
         "max_numerator": 24,
-        "operations": [FractionProblemType.ADD, FractionProblemType.SUBTRACT, FractionProblemType.MULTIPLY],
+        "operations": [
+            FractionProblemType.ADD,
+            FractionProblemType.SUBTRACT,
+            FractionProblemType.MULTIPLY,
+        ],
         "same_denominator": False,
     },
     DifficultyLevel.MEDIUM: {
         "max_denominator": 20,
         "max_numerator": 50,
-        "operations": [FractionProblemType.ADD, FractionProblemType.SUBTRACT, FractionProblemType.MULTIPLY, FractionProblemType.DIVIDE],
+        "operations": [
+            FractionProblemType.ADD,
+            FractionProblemType.SUBTRACT,
+            FractionProblemType.MULTIPLY,
+            FractionProblemType.DIVIDE,
+        ],
         "same_denominator": False,
     },
     DifficultyLevel.HARD: {
         "max_denominator": 50,
         "max_numerator": 100,
-        "operations": [FractionProblemType.ADD, FractionProblemType.SUBTRACT, FractionProblemType.MULTIPLY, FractionProblemType.DIVIDE],
+        "operations": [
+            FractionProblemType.ADD,
+            FractionProblemType.SUBTRACT,
+            FractionProblemType.MULTIPLY,
+            FractionProblemType.DIVIDE,
+        ],
         "same_denominator": False,
         "include_negatives": True,
     },
     DifficultyLevel.PRETTY_HARD: {
         "max_denominator": 100,
         "max_numerator": 200,
-        "operations": [FractionProblemType.ADD, FractionProblemType.SUBTRACT, FractionProblemType.MULTIPLY, FractionProblemType.DIVIDE],
+        "operations": [
+            FractionProblemType.ADD,
+            FractionProblemType.SUBTRACT,
+            FractionProblemType.MULTIPLY,
+            FractionProblemType.DIVIDE,
+        ],
         "same_denominator": False,
         "include_negatives": True,
         "multi_step": True,
@@ -137,7 +161,12 @@ FRACTION_DIFFICULTY_CONFIG = {
     DifficultyLevel.VERY_HARD: {
         "max_denominator": 100,
         "max_numerator": 500,
-        "operations": [FractionProblemType.ADD, FractionProblemType.SUBTRACT, FractionProblemType.MULTIPLY, FractionProblemType.DIVIDE],
+        "operations": [
+            FractionProblemType.ADD,
+            FractionProblemType.SUBTRACT,
+            FractionProblemType.MULTIPLY,
+            FractionProblemType.DIVIDE,
+        ],
         "same_denominator": False,
         "include_negatives": True,
         "multi_step": True,
@@ -308,10 +337,7 @@ class FractionsGenerator:
 
         # For easier addition/subtraction, sometimes use same denominator
         if config.get("same_denominator", False) and operator in ["+", "-"]:
-            frac2 = FractionValue(
-                self._rng.randint(1, config["max_numerator"]),
-                frac1.denominator
-            )
+            frac2 = FractionValue(self._rng.randint(1, config["max_numerator"]), frac1.denominator)
 
         # Compute result using Python's Fraction for accuracy
         pf1 = frac1.to_python_fraction()
@@ -375,83 +401,99 @@ class FractionsGenerator:
         steps = []
 
         # Step 0: Identify the numerator
-        steps.append(Step(
-            index=0,
-            operation=StepOperation.LITERAL,
-            before_state=f"numerator = {original.numerator}",
-            after_state=str(original.numerator),
-            args=LiteralArgs(value=float(original.numerator), source="numerator"),
-            input_refs=[],
-            output_value=float(original.numerator),
-            difficulty_cost=0.25,
-        ))
+        steps.append(
+            Step(
+                index=0,
+                operation=StepOperation.LITERAL,
+                before_state=f"numerator = {original.numerator}",
+                after_state=str(original.numerator),
+                args=LiteralArgs(value=float(original.numerator), source="numerator"),
+                input_refs=[],
+                output_value=float(original.numerator),
+                difficulty_cost=0.25,
+            )
+        )
 
         # Step 1: Identify the denominator
-        steps.append(Step(
-            index=1,
-            operation=StepOperation.LITERAL,
-            before_state=f"denominator = {original.denominator}",
-            after_state=str(original.denominator),
-            args=LiteralArgs(value=float(original.denominator), source="denominator"),
-            input_refs=[],
-            output_value=float(original.denominator),
-            difficulty_cost=0.25,
-        ))
+        steps.append(
+            Step(
+                index=1,
+                operation=StepOperation.LITERAL,
+                before_state=f"denominator = {original.denominator}",
+                after_state=str(original.denominator),
+                args=LiteralArgs(value=float(original.denominator), source="denominator"),
+                input_refs=[],
+                output_value=float(original.denominator),
+                difficulty_cost=0.25,
+            )
+        )
 
         # Step 2: Find GCD
         gcd = math.gcd(abs(original.numerator), abs(original.denominator))
-        steps.append(Step(
-            index=2,
-            operation=StepOperation.EVAL,
-            before_state=f"GCD({abs(original.numerator)}, {abs(original.denominator)})",
-            after_state=str(gcd),
-            rule_id=RuleID.FIND_GCD,
-            args=FractionArgs(numerator=abs(original.numerator), denominator=abs(original.denominator), gcd=gcd),
-            input_refs=[StepRef(step_index=0), StepRef(step_index=1)],
-            output_value=float(gcd),
-            difficulty_cost=1.0,
-        ))
+        steps.append(
+            Step(
+                index=2,
+                operation=StepOperation.EVAL,
+                before_state=f"GCD({abs(original.numerator)}, {abs(original.denominator)})",
+                after_state=str(gcd),
+                rule_id=RuleID.FIND_GCD,
+                args=FractionArgs(
+                    numerator=abs(original.numerator),
+                    denominator=abs(original.denominator),
+                    gcd=gcd,
+                ),
+                input_refs=[StepRef(step_index=0), StepRef(step_index=1)],
+                output_value=float(gcd),
+                difficulty_cost=1.0,
+            )
+        )
 
         # Step 3: Divide numerator by GCD
         new_num = original.numerator // gcd
-        steps.append(Step(
-            index=3,
-            operation=StepOperation.DIVIDE,
-            before_state=f"{original.numerator} ÷ {gcd}",
-            after_state=str(new_num),
-            rule_id=RuleID.REDUCE_NUMERATOR,
-            args=FractionArgs(numerator=original.numerator, gcd=gcd),
-            input_refs=[StepRef(step_index=0), StepRef(step_index=2)],
-            output_value=float(new_num),
-            difficulty_cost=0.5,
-        ))
+        steps.append(
+            Step(
+                index=3,
+                operation=StepOperation.DIVIDE,
+                before_state=f"{original.numerator} ÷ {gcd}",
+                after_state=str(new_num),
+                rule_id=RuleID.REDUCE_NUMERATOR,
+                args=FractionArgs(numerator=original.numerator, gcd=gcd),
+                input_refs=[StepRef(step_index=0), StepRef(step_index=2)],
+                output_value=float(new_num),
+                difficulty_cost=0.5,
+            )
+        )
 
         # Step 4: Divide denominator by GCD
         new_den = original.denominator // gcd
-        steps.append(Step(
-            index=4,
-            operation=StepOperation.DIVIDE,
-            before_state=f"{original.denominator} ÷ {gcd}",
-            after_state=str(new_den),
-            rule_id=RuleID.REDUCE_DENOMINATOR,
-            args=FractionArgs(denominator=original.denominator, gcd=gcd),
-            input_refs=[StepRef(step_index=1), StepRef(step_index=2)],
-            output_value=float(new_den),
-            difficulty_cost=0.5,
-        ))
+        steps.append(
+            Step(
+                index=4,
+                operation=StepOperation.DIVIDE,
+                before_state=f"{original.denominator} ÷ {gcd}",
+                after_state=str(new_den),
+                rule_id=RuleID.REDUCE_DENOMINATOR,
+                args=FractionArgs(denominator=original.denominator, gcd=gcd),
+                input_refs=[StepRef(step_index=1), StepRef(step_index=2)],
+                output_value=float(new_den),
+                difficulty_cost=0.5,
+            )
+        )
 
         # Step 5: Form reduced fraction
-        steps.append(Step(
-            index=5,
-            operation=StepOperation.SIMPLIFY,
-            before_state=f"{new_num}/{new_den}",
-            after_state=reduced.to_string(),
-            rule_id=RuleID.FORM_FRACTION,
-            args=FractionArgs(numerator=new_num, denominator=new_den),
-            input_refs=[StepRef(step_index=3), StepRef(step_index=4)],
-            output_value=reduced.value,
-            difficulty_cost=0.25,
-        ))
+        steps.append(
+            Step(
+                index=5,
+                operation=StepOperation.SIMPLIFY,
+                before_state=f"{new_num}/{new_den}",
+                after_state=reduced.to_string(),
+                rule_id=RuleID.FORM_FRACTION,
+                args=FractionArgs(numerator=new_num, denominator=new_den),
+                input_refs=[StepRef(step_index=3), StepRef(step_index=4)],
+                output_value=reduced.value,
+                difficulty_cost=0.25,
+            )
+        )
 
         return Trace(
             problem_id=problem_id,
@@ -472,76 +514,88 @@ class FractionsGenerator:
         step_idx = 0
 
         # Step 0: Record first fraction
-        steps.append(Step(
-            index=step_idx,
-            operation=StepOperation.LITERAL,
-            before_state=frac1.to_string(),
-            after_state=str(frac1.value),
-            args=LiteralArgs(value=frac1.value, source="fraction1"),
-            input_refs=[],
-            output_value=frac1.value,
-            difficulty_cost=0.25,
-        ))
+        steps.append(
+            Step(
+                index=step_idx,
+                operation=StepOperation.LITERAL,
+                before_state=frac1.to_string(),
+                after_state=str(frac1.value),
+                args=LiteralArgs(value=frac1.value, source="fraction1"),
+                input_refs=[],
+                output_value=frac1.value,
+                difficulty_cost=0.25,
+            )
+        )
         step_idx += 1
 
         # Step 1: Record second fraction
-        steps.append(Step(
-            index=step_idx,
-            operation=StepOperation.LITERAL,
-            before_state=frac2.to_string(),
-            after_state=str(frac2.value),
-            args=LiteralArgs(value=frac2.value, source="fraction2"),
-            input_refs=[],
-            output_value=frac2.value,
-            difficulty_cost=0.25,
-        ))
+        steps.append(
+            Step(
+                index=step_idx,
+                operation=StepOperation.LITERAL,
+                before_state=frac2.to_string(),
+                after_state=str(frac2.value),
+                args=LiteralArgs(value=frac2.value, source="fraction2"),
+                input_refs=[],
+                output_value=frac2.value,
+                difficulty_cost=0.25,
+            )
+        )
         step_idx += 1
 
         if operator in ["+", "-"]:
             # Find common denominator
-            lcm = (frac1.denominator * frac2.denominator) // math.gcd(frac1.denominator, frac2.denominator)
+            lcm = (frac1.denominator * frac2.denominator) // math.gcd(
+                frac1.denominator, frac2.denominator
+            )
 
-            steps.append(Step(
-                index=step_idx,
-                operation=StepOperation.COMMON_DENOM,
-                before_state=f"LCD({frac1.denominator}, {frac2.denominator})",
-                after_state=str(lcm),
-                rule_id=RuleID.FIND_LCM,
-                args=FractionArgs(denominator=frac1.denominator, lcm=lcm),
-                input_refs=[StepRef(step_index=0), StepRef(step_index=1)],
-                output_value=float(lcm),
-                difficulty_cost=1.0,
-            ))
+            steps.append(
+                Step(
+                    index=step_idx,
+                    operation=StepOperation.COMMON_DENOM,
+                    before_state=f"LCD({frac1.denominator}, {frac2.denominator})",
+                    after_state=str(lcm),
+                    rule_id=RuleID.FIND_LCM,
+                    args=FractionArgs(denominator=frac1.denominator, lcm=lcm),
+                    input_refs=[StepRef(step_index=0), StepRef(step_index=1)],
+                    output_value=float(lcm),
+                    difficulty_cost=1.0,
+                )
+            )
             step_idx += 1
 
             # Convert fractions
             new_num1 = frac1.numerator * (lcm // frac1.denominator)
             new_num2 = frac2.numerator * (lcm // frac2.denominator)
 
-            steps.append(Step(
-                index=step_idx,
-                operation=StepOperation.REWRITE,
-                before_state=f"{frac1.to_string()} = {new_num1}/{lcm}",
-                after_state=f"{new_num1}/{lcm}",
-                rule_id=RuleID.CONVERT_FRACTION,
-                args=FractionArgs(numerator=new_num1, denominator=lcm),
-                input_refs=[StepRef(step_index=0), StepRef(step_index=2)],
-                output_value=float(new_num1),
-                difficulty_cost=0.5,
-            ))
+            steps.append(
+                Step(
+                    index=step_idx,
+                    operation=StepOperation.REWRITE,
+                    before_state=f"{frac1.to_string()} = {new_num1}/{lcm}",
+                    after_state=f"{new_num1}/{lcm}",
+                    rule_id=RuleID.CONVERT_FRACTION,
+                    args=FractionArgs(numerator=new_num1, denominator=lcm),
+                    input_refs=[StepRef(step_index=0), StepRef(step_index=2)],
+                    output_value=float(new_num1),
+                    difficulty_cost=0.5,
+                )
+            )
             step_idx += 1
 
-            steps.append(Step(
-                index=step_idx,
-                operation=StepOperation.REWRITE,
-                before_state=f"{frac2.to_string()} = {new_num2}/{lcm}",
-                after_state=f"{new_num2}/{lcm}",
-                rule_id=RuleID.CONVERT_FRACTION,
-                args=FractionArgs(numerator=new_num2, denominator=lcm),
-                input_refs=[StepRef(step_index=1), StepRef(step_index=2)],
-                output_value=float(new_num2),
-                difficulty_cost=0.5,
-            ))
+            steps.append(
+                Step(
+                    index=step_idx,
+                    operation=StepOperation.REWRITE,
+                    before_state=f"{frac2.to_string()} = {new_num2}/{lcm}",
+                    after_state=f"{new_num2}/{lcm}",
+                    rule_id=RuleID.CONVERT_FRACTION,
+                    args=FractionArgs(numerator=new_num2, denominator=lcm),
+                    input_refs=[StepRef(step_index=1), StepRef(step_index=2)],
+                    output_value=float(new_num2),
+                    difficulty_cost=0.5,
+                )
+            )
             step_idx += 1
 
             # Perform operation
@@ -554,93 +608,105 @@ class FractionsGenerator:
                 op_step = StepOperation.SUBTRACT
                 rule = RuleID.SUBTRACT_FRACTIONS
 
-            steps.append(Step(
-                index=step_idx,
-                operation=op_step,
-                before_state=f"{new_num1}/{lcm} {operator} {new_num2}/{lcm}",
-                after_state=f"{result_num}/{lcm}",
-                rule_id=rule,
-                args=FractionArgs(numerator=result_num, denominator=lcm),
-                input_refs=[StepRef(step_index=step_idx-2), StepRef(step_index=step_idx-1)],
-                output_value=float(result_num),
-                difficulty_cost=0.75,
-            ))
+            steps.append(
+                Step(
+                    index=step_idx,
+                    operation=op_step,
+                    before_state=f"{new_num1}/{lcm} {operator} {new_num2}/{lcm}",
+                    after_state=f"{result_num}/{lcm}",
+                    rule_id=rule,
+                    args=FractionArgs(numerator=result_num, denominator=lcm),
+                    input_refs=[StepRef(step_index=step_idx - 2), StepRef(step_index=step_idx - 1)],
+                    output_value=float(result_num),
+                    difficulty_cost=0.75,
+                )
+            )
             step_idx += 1
 
         elif operator == "*":
             # Multiply numerators
             result_num = frac1.numerator * frac2.numerator
-            steps.append(Step(
-                index=step_idx,
-                operation=StepOperation.MULTIPLY,
-                before_state=f"{frac1.numerator} × {frac2.numerator}",
-                after_state=str(result_num),
-                rule_id=RuleID.MULTIPLY_FRACTIONS,
-                args=FractionArgs(numerator=result_num),
-                input_refs=[StepRef(step_index=0), StepRef(step_index=1)],
-                output_value=float(result_num),
-                difficulty_cost=0.5,
-            ))
+            steps.append(
+                Step(
+                    index=step_idx,
+                    operation=StepOperation.MULTIPLY,
+                    before_state=f"{frac1.numerator} × {frac2.numerator}",
+                    after_state=str(result_num),
+                    rule_id=RuleID.MULTIPLY_FRACTIONS,
+                    args=FractionArgs(numerator=result_num),
+                    input_refs=[StepRef(step_index=0), StepRef(step_index=1)],
+                    output_value=float(result_num),
+                    difficulty_cost=0.5,
+                )
+            )
             step_idx += 1
 
             # Multiply denominators
             result_den = frac1.denominator * frac2.denominator
-            steps.append(Step(
-                index=step_idx,
-                operation=StepOperation.MULTIPLY,
-                before_state=f"{frac1.denominator} × {frac2.denominator}",
-                after_state=str(result_den),
-                rule_id=RuleID.MULTIPLY_FRACTIONS,
-                args=FractionArgs(denominator=result_den),
-                input_refs=[StepRef(step_index=0), StepRef(step_index=1)],
-                output_value=float(result_den),
-                difficulty_cost=0.5,
-            ))
+            steps.append(
+                Step(
+                    index=step_idx,
+                    operation=StepOperation.MULTIPLY,
+                    before_state=f"{frac1.denominator} × {frac2.denominator}",
+                    after_state=str(result_den),
+                    rule_id=RuleID.MULTIPLY_FRACTIONS,
+                    args=FractionArgs(denominator=result_den),
+                    input_refs=[StepRef(step_index=0), StepRef(step_index=1)],
+                    output_value=float(result_den),
+                    difficulty_cost=0.5,
+                )
+            )
             step_idx += 1
 
         else:  # Division
             # Invert second fraction
-            steps.append(Step(
-                index=step_idx,
-                operation=StepOperation.INVERT,
-                before_state=frac2.to_string(),
-                after_state=f"{frac2.denominator}/{frac2.numerator}",
-                rule_id=RuleID.DIVIDE_FRACTIONS,
-                args=FractionArgs(numerator=frac2.denominator, denominator=frac2.numerator),
-                input_refs=[StepRef(step_index=1)],
-                output_value=frac2.denominator / frac2.numerator,
-                difficulty_cost=0.5,
-            ))
+            steps.append(
+                Step(
+                    index=step_idx,
+                    operation=StepOperation.INVERT,
+                    before_state=frac2.to_string(),
+                    after_state=f"{frac2.denominator}/{frac2.numerator}",
+                    rule_id=RuleID.DIVIDE_FRACTIONS,
+                    args=FractionArgs(numerator=frac2.denominator, denominator=frac2.numerator),
+                    input_refs=[StepRef(step_index=1)],
+                    output_value=frac2.denominator / frac2.numerator,
+                    difficulty_cost=0.5,
+                )
+            )
             step_idx += 1
 
             # Multiply
             result_num = frac1.numerator * frac2.denominator
             result_den = frac1.denominator * frac2.numerator
-            steps.append(Step(
-                index=step_idx,
-                operation=StepOperation.MULTIPLY,
-                before_state=f"{frac1.to_string()} × {frac2.denominator}/{frac2.numerator}",
-                after_state=f"{result_num}/{result_den}",
-                rule_id=RuleID.MULTIPLY_FRACTIONS,
-                args=FractionArgs(numerator=result_num, denominator=result_den),
-                input_refs=[StepRef(step_index=0), StepRef(step_index=step_idx-1)],
-                output_value=float(result_num),
-                difficulty_cost=0.75,
-            ))
+            steps.append(
+                Step(
+                    index=step_idx,
+                    operation=StepOperation.MULTIPLY,
+                    before_state=f"{frac1.to_string()} × {frac2.denominator}/{frac2.numerator}",
+                    after_state=f"{result_num}/{result_den}",
+                    rule_id=RuleID.MULTIPLY_FRACTIONS,
+                    args=FractionArgs(numerator=result_num, denominator=result_den),
+                    input_refs=[StepRef(step_index=0), StepRef(step_index=step_idx - 1)],
+                    output_value=float(result_num),
+                    difficulty_cost=0.75,
+                )
+            )
             step_idx += 1
 
         # Final simplification
-        steps.append(Step(
-            index=step_idx,
-            operation=StepOperation.REDUCE,
-            before_state="simplify result",
-            after_state=result.to_string(),
-            rule_id=RuleID.SIMPLIFY_RESULT,
-            args=FractionArgs(numerator=result.numerator, denominator=result.denominator),
-            input_refs=[StepRef(step_index=step_idx-1)],
-            output_value=result.value,
-            difficulty_cost=0.5,
-        ))
+        steps.append(
+            Step(
+                index=step_idx,
+                operation=StepOperation.REDUCE,
+                before_state="simplify result",
+                after_state=result.to_string(),
+                rule_id=RuleID.SIMPLIFY_RESULT,
+                args=FractionArgs(numerator=result.numerator, denominator=result.denominator),
+                input_refs=[StepRef(step_index=step_idx - 1)],
+                output_value=result.value,
+                difficulty_cost=0.5,
+            )
+        )
 
         return Trace(
             problem_id=problem_id,
@@ -667,7 +733,4 @@ class FractionsGenerator:
         if start_seed is None:
             start_seed = random.randint(0, 2**31 - 1)
 
-        return [
-            self.generate(seed=start_seed + i, difficulty=difficulty)
-            for i in range(count)
-        ]
+        return [self.generate(seed=start_seed + i, difficulty=difficulty) for i in range(count)]

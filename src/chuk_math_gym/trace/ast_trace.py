@@ -7,7 +7,7 @@ traces following proper order of operations.
 
 import re
 from typing import Optional, Tuple, List
-from decimal import Decimal, getcontext
+from decimal import getcontext
 from dataclasses import dataclass
 
 from chuk_math_gym.schemas.problem import Problem
@@ -29,9 +29,10 @@ getcontext().prec = 64
 @dataclass
 class ASTNode:
     """Simple AST node for expression trees."""
+
     value: str  # Operator or number
-    left: Optional['ASTNode'] = None
-    right: Optional['ASTNode'] = None
+    left: Optional["ASTNode"] = None
+    right: Optional["ASTNode"] = None
     is_unary: bool = False
 
     def is_leaf(self) -> bool:
@@ -40,7 +41,7 @@ class ASTNode:
 
     def is_operator(self) -> bool:
         """Check if this is an operator node."""
-        return self.value in ['+', '-', '*', '/', '^']
+        return self.value in ["+", "-", "*", "/", "^"]
 
 
 class ExpressionTokenizer:
@@ -60,10 +61,10 @@ class ExpressionTokenizer:
                 self.pos += 1
                 continue
 
-            if char in '+-*/^()':
+            if char in "+-*/^()":
                 tokens.append(char)
                 self.pos += 1
-            elif char.isdigit() or char == '.':
+            elif char.isdigit() or char == ".":
                 tokens.append(self._read_number())
             else:
                 self.pos += 1  # Skip unknown characters
@@ -75,14 +76,14 @@ class ExpressionTokenizer:
         start = self.pos
         while self.pos < len(self.expression):
             char = self.expression[self.pos]
-            if char.isdigit() or char == '.' or char.lower() == 'e':
+            if char.isdigit() or char == "." or char.lower() == "e":
                 self.pos += 1
-            elif char in '+-' and self.pos > start and self.expression[self.pos-1].lower() == 'e':
+            elif char in "+-" and self.pos > start and self.expression[self.pos - 1].lower() == "e":
                 # Handle scientific notation like 1e-5
                 self.pos += 1
             else:
                 break
-        return self.expression[start:self.pos]
+        return self.expression[start : self.pos]
 
 
 class ExpressionParser:
@@ -92,11 +93,11 @@ class ExpressionParser:
     """
 
     PRECEDENCE = {
-        '+': 1,
-        '-': 1,
-        '*': 2,
-        '/': 2,
-        '^': 3,
+        "+": 1,
+        "-": 1,
+        "*": 2,
+        "/": 2,
+        "^": 3,
     }
 
     def __init__(self, tokens: List[str]):
@@ -135,8 +136,10 @@ class ExpressionParser:
                 break
 
             operator = self._advance()
+            if operator is None:
+                break
             # Right-associative for power, left-associative for others
-            next_min_prec = precedence + 1 if operator != '^' else precedence
+            next_min_prec = precedence + 1 if operator != "^" else precedence
             right = self._parse_expression(next_min_prec)
 
             left = ASTNode(value=operator, left=left, right=right)
@@ -151,18 +154,18 @@ class ExpressionParser:
             return None
 
         # Handle unary minus/plus
-        if token == '-' or token == '+':
+        if token == "-" or token == "+":
             self._advance()
             operand = self._parse_primary()
-            if token == '-':
-                return ASTNode(value='-', right=operand, is_unary=True)
+            if token == "-":
+                return ASTNode(value="-", right=operand, is_unary=True)
             return operand
 
         # Handle parentheses
-        if token == '(':
+        if token == "(":
             self._advance()
             expr = self._parse_expression(0)
-            if self._current_token() == ')':
+            if self._current_token() == ")":
                 self._advance()
             return expr
 
@@ -191,11 +194,11 @@ class ASTTraceGenerator(TraceGenerator):
     """
 
     OPERATOR_TO_STEP = {
-        '+': StepOperation.ADD,
-        '-': StepOperation.SUBTRACT,
-        '*': StepOperation.MULTIPLY,
-        '/': StepOperation.DIVIDE,
-        '^': StepOperation.POWER,
+        "+": StepOperation.ADD,
+        "-": StepOperation.SUBTRACT,
+        "*": StepOperation.MULTIPLY,
+        "/": StepOperation.DIVIDE,
+        "^": StepOperation.POWER,
     }
 
     def __init__(self):
@@ -269,7 +272,7 @@ class ASTTraceGenerator(TraceGenerator):
             # final_step_index defaults to last step
         )
 
-    def _evaluate_node(self, node: ASTNode) -> Tuple[int, float]:
+    def _evaluate_node(self, node: Optional[ASTNode]) -> Tuple[int, float]:
         """
         Recursively evaluate an AST node.
 
@@ -279,7 +282,7 @@ class ASTTraceGenerator(TraceGenerator):
             return -1, 0.0
 
         # Handle unary minus
-        if node.is_unary and node.value == '-':
+        if node.is_unary and node.value == "-":
             right_step_idx, right_value = self._evaluate_node(node.right)
             result_value = -right_value
 
@@ -382,20 +385,20 @@ class ASTTraceGenerator(TraceGenerator):
             ZeroDivisionError: If dividing by zero
             ValueError: If operator is unknown
         """
-        if operator == '+':
+        if operator == "+":
             return left + right
-        elif operator == '-':
+        elif operator == "-":
             return left - right
-        elif operator == '*':
+        elif operator == "*":
             return left * right
-        elif operator == '/':
+        elif operator == "/":
             if right == 0:
                 raise ZeroDivisionError(f"Division by zero: {left} / {right}")
             return left / right
-        elif operator == '^':
+        elif operator == "^":
             if left == 0 and right < 0:
                 raise ZeroDivisionError(f"Zero raised to negative power: {left} ^ {right}")
-            return left ** right
+            return float(left**right)
         else:
             raise ValueError(f"Unknown operator: {operator}")
 
@@ -408,11 +411,11 @@ class ASTTraceGenerator(TraceGenerator):
     def _compute_step_difficulty(self, operator: str, left: float, right: float) -> float:
         """Compute difficulty cost for a step."""
         base_costs = {
-            '+': 0.5,
-            '-': 0.6,
-            '*': 1.0,
-            '/': 1.2,
-            '^': 1.5,
+            "+": 0.5,
+            "-": 0.6,
+            "*": 1.0,
+            "/": 1.2,
+            "^": 1.5,
         }
         base_cost = base_costs.get(operator, 1.0)
 
@@ -432,8 +435,8 @@ class ASTTraceGenerator(TraceGenerator):
     def _get_common_mistake(self, operator: str) -> Optional[str]:
         """Get common mistake type for an operator."""
         mistakes = {
-            '-': 'sign_error',
-            '/': 'division_error',
+            "-": "sign_error",
+            "/": "division_error",
         }
         return mistakes.get(operator)
 
@@ -449,7 +452,9 @@ class ASTTraceGenerator(TraceGenerator):
             # Steps with multiple inputs that aren't literals are checkpoints
             if len(step.input_refs) >= 2 and step.operation != StepOperation.LITERAL:
                 # Check if inputs are from other operations (not just literals)
-                input_steps = [s for s in self._steps if StepRef(step_index=s.index) in step.input_refs]
+                input_steps = [
+                    s for s in self._steps if StepRef(step_index=s.index) in step.input_refs
+                ]
                 if any(s.operation != StepOperation.LITERAL for s in input_steps):
                     checkpoints.append(step.index)
 
@@ -463,11 +468,11 @@ class ASTTraceGenerator(TraceGenerator):
         """Extract expression from a prompt string."""
         # Try to find expression patterns
         patterns = [
-            r'What is ([^?]+)\?',
-            r'Calculate[:\s]+(.+)',
-            r'Evaluate[:\s]+(.+)',
-            r'Solve[:\s]+(.+)',
-            r'Compute[:\s]+(.+)',
+            r"What is ([^?]+)\?",
+            r"Calculate[:\s]+(.+)",
+            r"Evaluate[:\s]+(.+)",
+            r"Solve[:\s]+(.+)",
+            r"Compute[:\s]+(.+)",
         ]
         for pattern in patterns:
             match = re.search(pattern, prompt, re.IGNORECASE)

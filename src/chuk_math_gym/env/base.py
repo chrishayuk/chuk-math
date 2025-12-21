@@ -13,12 +13,11 @@ Designed to integrate with:
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Optional, Tuple
+from typing import Optional, Tuple
 import random
 
 from chuk_math_gym.schemas.problem import (
     Problem,
-    DomainType,
     DifficultyLevel,
     ToolPolicy,
 )
@@ -182,7 +181,6 @@ class MathGymEnv(ABC):
             raise RuntimeError("Episode is done. Call reset() to start new episode.")
 
         self.state.steps_taken += 1
-        reward = self.step_penalty  # Base step penalty
 
         # Parse action
         action = action.strip()
@@ -197,6 +195,8 @@ class MathGymEnv(ABC):
 
     def _handle_answer(self, action: str) -> Tuple[str, float, bool, dict]:
         """Handle an answer submission."""
+        assert self.state is not None  # Caller must check
+
         # Extract answer value
         parts = action.split(maxsplit=1)
         if len(parts) < 2:
@@ -256,6 +256,8 @@ class MathGymEnv(ABC):
 
     def _handle_tool_call(self, action: str) -> Tuple[str, float, bool, dict]:
         """Handle a tool call."""
+        assert self.state is not None  # Caller must check
+
         # Check tool policy
         if self.state.problem.tool_policy == ToolPolicy.FORBIDDEN:
             return (
@@ -280,6 +282,7 @@ class MathGymEnv(ABC):
 
         # Parse args
         import json
+
         try:
             args = json.loads(args_str)
         except json.JSONDecodeError:
@@ -287,10 +290,12 @@ class MathGymEnv(ABC):
             args = {"value": args_str}
 
         # Record the tool call
-        self.state.tool_calls.append({
-            "name": tool_name,
-            "args": args,
-        })
+        self.state.tool_calls.append(
+            {
+                "name": tool_name,
+                "args": args,
+            }
+        )
 
         # Simulate tool execution (subclasses can override)
         result = self._execute_tool(tool_name, args)
@@ -349,7 +354,7 @@ class MathGymEnv(ABC):
             f"Tool calls: {len(self.state.tool_calls)}",
         ]
 
-        if self.state.done:
+        if self.state.done and self.state.final_result is not None:
             lines.append(f"Episode done. Correct: {self.state.final_result.correct}")
 
         return "\n".join(lines)

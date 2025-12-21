@@ -1,16 +1,13 @@
 # expression_generator/utilities/random_number_generator.py
 import random
 
+
 def generate_random_number(
-    min_val=1,
-    max_val=10,
-    allow_negative=False,
-    allow_decimals=False,
-    decimal_places=2
+    min_val=1, max_val=10, allow_negative=False, allow_decimals=False, decimal_places=2
 ):
     """
     Generate a random number with specified options.
-    
+
     Parameters:
     - min_val (float): Minimum possible value
     - max_val (float): Maximum possible value

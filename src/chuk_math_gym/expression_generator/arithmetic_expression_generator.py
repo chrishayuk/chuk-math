@@ -1,12 +1,17 @@
 import random
-from chuk_math_gym.expression_generator.utilities.random_number_generator import generate_random_number
-from chuk_math_gym.expression_generator.utilities.random_operator_generator import generate_random_operator
+from chuk_math_gym.expression_generator.utilities.random_number_generator import (
+    generate_random_number,
+)
+from chuk_math_gym.expression_generator.utilities.random_operator_generator import (
+    generate_random_operator,
+)
+
 
 def format_number(num: float, decimal_places: int = 2) -> str:
     """
     Convert 'num' to a string truncated to 'decimal_places' decimals,
     *without* wrapping negative values in parentheses anymore.
-    
+
     Examples:
       -  -6142  -> "-6142"
       -  -12.34 -> "-12.34"
@@ -23,6 +28,7 @@ def format_number(num: float, decimal_places: int = 2) -> str:
 
     return s  # negative numbers are just e.g. "-6142"
 
+
 def needs_parens(expr: str) -> bool:
     """
     Decide if we *might* want parentheses around 'expr'.
@@ -31,24 +37,25 @@ def needs_parens(expr: str) -> bool:
     # If expr looks like a simple number (possibly negative), skip parentheses:
     # e.g. "-6142" or "3.14" or "42"
     # We'll add parentheses only if we detect +, -, *, /, or spaces beyond a leading minus.
-    
+
     # Remove leading/trailing whitespace
     expr = expr.strip()
 
     # If it starts with a minus but has no additional operators/spaces, it's a single negative literal
-    if expr.startswith('-'):
+    if expr.startswith("-"):
         # if there's another operator or space inside, we might still want parentheses
         # but if it's purely '-####' or '-####.##', skip
         # check if there's a space or +,*,/ beyond the first char
-        if any(op in expr[1:] for op in ['+', '-', '*', '/', ' ']):
+        if any(op in expr[1:] for op in ["+", "-", "*", "/", " "]):
             return True
         return False
 
     # For non-negative, check if it has spaces or an operator
-    operators = ['+', '-', '*', '/']
-    if any(op in expr for op in operators) or ' ' in expr:
+    operators = ["+", "-", "*", "/"]
+    if any(op in expr for op in operators) or " " in expr:
         return True
     return False
+
 
 def maybe_wrap(expr: str, chance: float = 0.5) -> str:
     """
@@ -58,6 +65,7 @@ def maybe_wrap(expr: str, chance: float = 0.5) -> str:
     if needs_parens(expr) and random.random() < chance:
         return f"({expr})"
     return expr
+
 
 class ArithmeticExpressionGenerator:
     def __init__(self):
@@ -73,7 +81,7 @@ class ArithmeticExpressionGenerator:
         max_number: float = 10,
         include_advanced_operators: bool = False,
         allow_division: bool = True,
-        decimal_places: int = 2
+        decimal_places: int = 2,
     ) -> str:
         """
         Recursively generate a random mathematical expression.
@@ -85,7 +93,7 @@ class ArithmeticExpressionGenerator:
                 max_val=max_number,
                 allow_negative=allow_negative,
                 allow_decimals=allow_decimals,
-                decimal_places=decimal_places
+                decimal_places=decimal_places,
             )
             return format_number(val, decimal_places)
         else:
@@ -106,7 +114,7 @@ class ArithmeticExpressionGenerator:
                 max_number=max_number,
                 include_advanced_operators=include_advanced_operators,
                 allow_division=allow_division,
-                decimal_places=decimal_places
+                decimal_places=decimal_places,
             )
 
             right_val = generate_random_number(
@@ -114,22 +122,19 @@ class ArithmeticExpressionGenerator:
                 max_val=10,
                 allow_negative=allow_negative,
                 allow_decimals=right_decimals,
-                decimal_places=decimal_places
+                decimal_places=decimal_places,
             )
             # Avoid dividing by zero
             if operator == "/" and right_val == 0:
                 right_val = generate_random_number(
-                    min_val=1,
-                    max_val=10,
-                    allow_negative=False,
-                    allow_decimals=False
+                    min_val=1, max_val=10, allow_negative=False, allow_decimals=False
                 )
 
             right_part = format_number(right_val, decimal_places)
 
             # Maybe wrap each side if they contain operators/spaces
-            left_part = maybe_wrap(left_part, 0.6)   # 60% chance
-            right_part = maybe_wrap(right_part, 0.6) # 60% chance
+            left_part = maybe_wrap(left_part, 0.6)  # 60% chance
+            right_part = maybe_wrap(right_part, 0.6)  # 60% chance
 
             expr = f"{left_part} {operator} {right_part}"
 
@@ -196,7 +201,7 @@ class ArithmeticExpressionGenerator:
             max_number=max_number,
             include_advanced_operators=include_advanced_operators,
             allow_division=allow_division,
-            decimal_places=decimal_places
+            decimal_places=decimal_places,
         )
 
         # If the difficulty suggests multiple operands, chain them
@@ -219,7 +224,7 @@ class ArithmeticExpressionGenerator:
                 max_number=max_number,
                 include_advanced_operators=include_advanced_operators,
                 allow_division=allow_division,
-                decimal_places=decimal_places
+                decimal_places=decimal_places,
             )
 
             chained = f"{expression} {operator} {new_expr}"

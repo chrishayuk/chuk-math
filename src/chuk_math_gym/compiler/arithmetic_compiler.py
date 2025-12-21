@@ -4,12 +4,17 @@ Arithmetic expression compiler.
 Parses arithmetic expressions and generates instruction outputs.
 """
 
+import json
 import logging
 from typing import Optional, Any
 
-from chuk_math_gym.compiler.instructions.math_problem_instruction import MATHProblemInstruction
-from chuk_math_gym.compiler.parser.arithmetic_expression import ArithmeticExpression, TokenizationError
-from chuk_math_gym.compiler.instructions.infix_expression_calculator_instruction import InfixExpressionCalculatorInstruction
+from chuk_math_gym.compiler.parser.arithmetic_expression import (
+    ArithmeticExpression,
+    TokenizationError,
+)
+from chuk_math_gym.compiler.instructions.infix_expression_calculator_instruction import (
+    InfixExpressionCalculatorInstruction,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +27,7 @@ class ArithmeticCompiler:
         self.expression = expression
         self.arithmetic_expression = ArithmeticExpression(expression)
         self.ast: Optional[Any] = None
-        self.json_ast: Optional[dict] = None
+        self.json_ast: Optional[Any] = None
         self.tokens: Optional[list] = None
         self.instruction: Optional[InfixExpressionCalculatorInstruction] = None
 
@@ -63,14 +68,20 @@ class ArithmeticCompiler:
         Returns:
             True if instruction generation succeeded, False otherwise.
         """
-        if not self.ast or not self.tokens:
+        if not self.ast or not self.tokens or self.json_ast is None:
             logger.warning("No AST or tokens available to generate instruction.")
             self.instruction = None
             return False
 
         try:
+            # json_ast is a JSON string, so parse it to a dict
+            ast_dict = (
+                json.loads(self.json_ast) if isinstance(self.json_ast, str) else self.json_ast
+            )
             self.instruction = InfixExpressionCalculatorInstruction(
-                self.json_ast, self.tokens, llm=llm
+                ast_dict if isinstance(ast_dict, dict) else {},
+                self.tokens,
+                llm=llm,
             )
             return True
         except (ValueError, TypeError, KeyError) as e:

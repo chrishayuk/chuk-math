@@ -118,35 +118,41 @@ class Verifier(ABC):
 
             # Check if tool is allowed
             if problem.allowed_tools and tool_name not in problem.allowed_tools:
-                grades.append(ToolCallGrade(
-                    tool_name=tool_name,
-                    args=args,
-                    valid=False,
-                    necessary=False,
-                    efficient=False,
-                    penalty=0.5,
-                    error_message=f"Tool '{tool_name}' not in allowed list",
-                ))
+                grades.append(
+                    ToolCallGrade(
+                        tool_name=tool_name,
+                        args=args,
+                        valid=False,
+                        necessary=False,
+                        efficient=False,
+                        penalty=0.5,
+                        error_message=f"Tool '{tool_name}' not in allowed list",
+                    )
+                )
             elif problem.forbidden_tools and tool_name in problem.forbidden_tools:
-                grades.append(ToolCallGrade(
-                    tool_name=tool_name,
-                    args=args,
-                    valid=False,
-                    necessary=False,
-                    efficient=False,
-                    penalty=1.0,
-                    error_message=f"Tool '{tool_name}' is forbidden",
-                ))
+                grades.append(
+                    ToolCallGrade(
+                        tool_name=tool_name,
+                        args=args,
+                        valid=False,
+                        necessary=False,
+                        efficient=False,
+                        penalty=1.0,
+                        error_message=f"Tool '{tool_name}' is forbidden",
+                    )
+                )
             else:
                 # Basic valid call
-                grades.append(ToolCallGrade(
-                    tool_name=tool_name,
-                    args=args,
-                    valid=True,
-                    necessary=True,
-                    efficient=True,
-                    penalty=0.0,
-                ))
+                grades.append(
+                    ToolCallGrade(
+                        tool_name=tool_name,
+                        args=args,
+                        valid=True,
+                        necessary=True,
+                        efficient=True,
+                        penalty=0.0,
+                    )
+                )
 
         return grades
 

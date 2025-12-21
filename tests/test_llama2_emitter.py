@@ -1,12 +1,13 @@
 from chuk_math_gym.compiler.instructions.output_emitters.llama2_emitter import emit_llama2
 
+
 def test_output_as_llama2():
     # set the instruction
     instruction = {
         "instruction": "Infix expression calculation",
         "expression": '{"tokens": [1, 2, 3]}',
         "tokens": "1 + 2 * 3",
-        "result": "calculated result"
+        "result": "calculated result",
     }
 
     # set the expected output

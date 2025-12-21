@@ -1,13 +1,19 @@
 import json
-import random
 from decimal import Decimal, InvalidOperation, getcontext
+from typing import Any, Dict, List, Optional
 from sympy import sympify, SympifyError
 from langchain_core.output_parsers import StrOutputParser
 from langchain.prompts import PromptTemplate
 from chuk_math_gym.compiler.instructions.instruction_emitter import InstructionEmitter
 
+
 class MATHProblemInstruction(InstructionEmitter):
-    def __init__(self, ast: dict, tokens: list = None, llm: str = None):
+    def __init__(
+        self,
+        ast: Dict[str, Any],
+        tokens: Optional[List[Any]] = None,
+        llm: Optional[str] = None,
+    ):
         # Check if we're parsing an ast or tokens
         if isinstance(ast, str):
             ast = json.loads(ast)
@@ -18,19 +24,16 @@ class MATHProblemInstruction(InstructionEmitter):
         # Set the tokens
         self.tokens = tokens or []
 
-    def get_random_instruction(self, use_llm=False) -> dict:
+    def get_random_instruction(self, use_llm: bool = False) -> str:
         # get the template
-        template = {
-            "instruction": f"Solve for the value of the expression: {self.expression}.",
-            "expression": self.expression
-        }
+        instruction = f"Solve for the value of the expression: {self.expression}."
 
         if use_llm and self.llm:
-            refined_problem = self.get_instruction_from_llm(template["instruction"])
+            refined_problem = self.get_instruction_from_llm(instruction)
             if not refined_problem.startswith("Error"):
-                template["instruction"] = refined_problem
+                instruction = refined_problem
 
-        return template
+        return instruction
 
     def get_instruction_from_llm(self, question: str) -> str:
         prompt_template = """Based on the following mathematical expression, generate a problem similar to those found in the MATH dataset. The problem should include a real-world scenario and a narrative.
@@ -52,14 +55,19 @@ class MATHProblemInstruction(InstructionEmitter):
         Problem: """
 
         try:
-            prompt = PromptTemplate(input_variables=["expression", "question"], template=prompt_template)
-            
+            if self.llm is None:
+                return "Error: No LLM configured"
+
+            prompt = PromptTemplate(
+                input_variables=["expression", "question"], template=prompt_template
+            )
+
             # Assuming that the llm provided is a valid object handled outside of this code snippet
             chain = prompt | self.llm | StrOutputParser()
 
             response = chain.invoke({"expression": self.expression, "question": question})
 
-            return response
+            return str(response)
         except Exception as e:
             return f"Error generating instruction from LLM: {e}"
 
@@ -71,10 +79,13 @@ class MATHProblemInstruction(InstructionEmitter):
             result = sympy_expr.evalf()
             getcontext().prec = 64
             decimal_result = Decimal(str(result))
-            return decimal_result.quantize(Decimal('1.0000')).normalize()
+            return decimal_result.quantize(Decimal("1.0000")).normalize()
         except (SympifyError, InvalidOperation, ValueError) as error:
             raise ValueError(f"Invalid expression or calculation error: {error}")
 
-    def generate_explanation(self):
+    def generate_explanation(self) -> str:
         return "This explanation details the steps taken to evaluate the expression."
 
+    def generate_placeholder_explanation(self) -> str:
+        """Generate placeholder explanation for MATH problems."""
+        return self.generate_explanation()

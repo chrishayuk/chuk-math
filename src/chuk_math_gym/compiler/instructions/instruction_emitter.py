@@ -1,7 +1,6 @@
 import os
 from abc import ABC, abstractmethod
-from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from jinja2 import Environment, FileSystemLoader
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.output_parsers import StrOutputParser
@@ -13,26 +12,48 @@ from chuk_math_gym.compiler.instructions.output_emitters.chat_emitter import emi
 from chuk_math_gym.compiler.instructions.output_emitters.llama2_emitter import emit_llama2
 from chuk_math_gym.compiler.instructions.output_emitters.qa_emitter import emit_qa
 
+
 class IInstructionEmitter(ABC):
     @abstractmethod
     def emit_instruction(self) -> Dict[str, Any]:
         pass
 
+
 class InstructionEmitter(IInstructionEmitter):
-    def __init__(self, ast: Dict[str, Any] = None, tokens: List[Any] = None, llm: str = None):
+    def __init__(
+        self,
+        ast: Optional[Dict[str, Any]] = None,
+        tokens: Optional[List[Any]] = None,
+        llm: Optional[str] = None,
+    ):
         self.ast = ast
         self.tokens = tokens or []
         self.expression = ""  # Ensure this is set
 
         # Set up the LLM client using LangChain
-        if llm:
-            self.llm = OllamaLLM(model=llm)
-        else:
-            self.llm = None
+        self.llm: Optional[OllamaLLM] = OllamaLLM(model=llm) if llm else None
 
-    def emit_instruction(self, step_by_step_template_name = "math_stepbystep_template.jinja") -> Dict[str, Any]:
+    @abstractmethod
+    def get_random_instruction(self, use_llm: bool = False) -> str:
+        """Get a random instruction template. Subclasses must implement."""
+        pass
+
+    @abstractmethod
+    def generate_placeholder_explanation(self) -> str:
+        """Generate placeholder explanation. Subclasses must implement."""
+        pass
+
+    @abstractmethod
+    def safe_eval(self, expression: str) -> Any:
+        """Safely evaluate the expression. Subclasses must implement."""
+        pass
+
+    def emit_instruction(
+        self, step_by_step_template_name: str = "math_stepbystep_template.jinja"
+    ) -> Dict[str, Any]:
         # Extract the expression from the ast
-        self.expression = self.extract_expression_from_ast(self.ast)
+        if self.ast is not None:
+            self.expression = self.extract_expression_from_ast(self.ast)
 
         # Simplify the tokens
         simplified_tokens = self.simplify_tokens(self.tokens)
@@ -44,13 +65,14 @@ class InstructionEmitter(IInstructionEmitter):
         answer = self.evaluate_expression()
 
         # Generate the explanation
-        #explanation = self.generate_explanation()
         explanation = self.generate_placeholder_explanation()
 
         # Generate LLM responses only if an LLM is provided
         if self.llm:
             pretty_result = self.get_pretty_result(question, answer)
-            step_by_step_result = self.get_step_by_step_explanation(question, answer, explanation, step_by_step_template_name)
+            step_by_step_result = self.get_step_by_step_explanation(
+                question, answer, explanation, step_by_step_template_name
+            )
         else:
             pretty_result = step_by_step_result = None
 
@@ -63,15 +85,14 @@ class InstructionEmitter(IInstructionEmitter):
             "result": answer,
             "explanation": explanation,
             "llm_pretty_result": pretty_result,
-            "llm_step_by_step_result": step_by_step_result
+            "llm_step_by_step_result": step_by_step_result,
         }
 
         return instruction
-    
 
     def simplify_tokens(self, tokens: List[Any]) -> List[Dict[str, Any]]:
         """Converts tokens into a simplified representation."""
-        return [{'type': token.type, 'value': token.value} for token in tokens]
+        return [{"type": token.type, "value": token.value} for token in tokens]
 
     def emit_json(self):
         """Emit JSON."""
@@ -80,8 +101,8 @@ class InstructionEmitter(IInstructionEmitter):
     def emit_jsonl(self):
         """Emit JSON Lines."""
         return emit_jsonl(self.emit_instruction())
-    
-    def emit_chat(self, step_by_step_template_name = "math_stepbystep_template.jinja"):
+
+    def emit_chat(self, step_by_step_template_name="math_stepbystep_template.jinja"):
         """Emit chat format."""
         return emit_chat(self.emit_instruction(step_by_step_template_name))
 
@@ -93,7 +114,7 @@ class InstructionEmitter(IInstructionEmitter):
         """Emit Q&A format."""
         return emit_qa(self.emit_instruction())
 
-    def extract_expression_from_ast(self, node: Dict[str, Any]) -> str:
+    def extract_expression_from_ast(self, node: Optional[Dict[str, Any]]) -> str:
         """
         Extracts a string representation of the expression from the AST
         with minimal parentheses.
@@ -112,7 +133,9 @@ class InstructionEmitter(IInstructionEmitter):
             return f"{op}{operand_str}"
 
         # 2. Handle binary expression (left, operator, right)
-        if node_type == "BinaryExpression" or ("operator" in node and "left" in node and "right" in node):
+        if node_type == "BinaryExpression" or (
+            "operator" in node and "left" in node and "right" in node
+        ):
             op = node["operator"]["value"]
             left_node = node.get("left")
             right_node = node.get("right")
@@ -142,11 +165,11 @@ class InstructionEmitter(IInstructionEmitter):
         # Fallback if no recognised node type
         return ""
 
-    def _needs_parentheses(self, sub_ast: Dict[str, Any], parent_op: str) -> bool:
+    def _needs_parentheses(self, sub_ast: Optional[Dict[str, Any]], parent_op: str) -> bool:
         """Determines if the sub-expression needs parentheses based on the parent operator."""
         if not sub_ast or not isinstance(sub_ast, dict):
             return False
-        
+
         # If it's unary, skip parentheses logic
         if sub_ast.get("type") == "UnaryExpression":
             return False
@@ -157,11 +180,7 @@ class InstructionEmitter(IInstructionEmitter):
 
         child_op = sub_ast["operator"]["value"]
         # Precedence rules
-        precedence = {
-            '+': 1, '-': 1,
-            '*': 2, '/': 2,
-            '^': 3
-        }
+        precedence = {"+": 1, "-": 1, "*": 2, "/": 2, "^": 3}
 
         return precedence.get(child_op, 0) < precedence.get(parent_op, 0)
 
@@ -177,16 +196,20 @@ class InstructionEmitter(IInstructionEmitter):
         """Generate a natural language response using the question and answer."""
         response_template = """For the question "{question}" and it's associated expression "{expression}", the result is "{answer}".  Now create a highly readable version of the answer, keep it simple, not LATEX.  Just provide the answer response, no premable, do not change the values for the question or expression."""
 
-        # call the llm
-        return self.get_llm_response(response_template.format(expression=self.expression, answer=answer, question=question))
+        # call the llm
+        return self.get_llm_response(
+            response_template.format(expression=self.expression, answer=answer, question=question)
+        )
 
-    def get_step_by_step_explanation(self, question, answer, explanation, template_name = "math_stepbystep_template.jinja") -> str:
+    def get_step_by_step_explanation(
+        self, question, answer, explanation, template_name="math_stepbystep_template.jinja"
+    ) -> str:
         """Generate a step-by-step explanation using the Jinja template."""
-        #template_name = "math_stepbystep_reflection_template.jinja"
+        # template_name = "math_stepbystep_reflection_template.jinja"
         template_name = "math_stepbystep_template.jinja"
 
         # Locate the folder containing your template files
-        templates_dir = os.path.join(os.path.dirname(__file__), 'prompt_templates')
+        templates_dir = os.path.join(os.path.dirname(__file__), "prompt_templates")
 
         # Create a Jinja environment pointing to that folder
         env = Environment(loader=FileSystemLoader(templates_dir))
@@ -196,15 +219,11 @@ class InstructionEmitter(IInstructionEmitter):
 
         # Render the template, injecting your variables
         rendered_output = template.render(
-            question=question,
-            expression=self.expression,
-            answer=answer,
-            explanation=explanation
+            question=question, expression=self.expression, answer=answer, explanation=explanation
         )
 
         # If you still wish to pass the rendered output to your LLM, do so here
         return self.get_llm_response(rendered_output)
-
 
     def get_llm_response(self, input_text: str) -> str:
         """Get a response from the LLM."""
@@ -218,5 +237,3 @@ class InstructionEmitter(IInstructionEmitter):
                 return f"Error generating response from LLM: {e}"
         else:
             return input_text  # Fallback to the raw text if no LLM is available
-        
-    

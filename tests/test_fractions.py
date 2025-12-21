@@ -1,8 +1,5 @@
 """Tests for the fractions domain."""
 
-import pytest
-from fractions import Fraction
-
 from chuk_math_gym.schemas.problem import DifficultyLevel, DomainType, ToolPolicy, Problem
 from chuk_math_gym.domains.fractions import (
     FractionsGenerator,
@@ -67,12 +64,11 @@ class TestFractionsGenerator:
         generator = FractionsGenerator()
 
         easy_problems = [
-            generator.generate(seed=i, difficulty=DifficultyLevel.VERY_EASY)[0]
-            for i in range(10)
+            generator.generate(seed=i, difficulty=DifficultyLevel.VERY_EASY)[0] for i in range(10)
         ]
 
         hard_problems = [
-            generator.generate(seed=i+100, difficulty=DifficultyLevel.VERY_HARD)[0]
+            generator.generate(seed=i + 100, difficulty=DifficultyLevel.VERY_HARD)[0]
             for i in range(10)
         ]
 
@@ -221,7 +217,7 @@ class TestFractionsGymEnv:
     def test_step_wrong_answer(self):
         """Test stepping with wrong answer."""
         env = FractionsGymEnv()
-        problem = env.reset(seed=42)
+        env.reset(seed=42)
 
         # Submit a wrong answer
         obs, reward, done, info = env.step("ANSWER 999/1000")
@@ -246,7 +242,7 @@ class TestFractionsGymEnv:
     def test_tool_policy(self):
         """Test tool policy enforcement."""
         env = FractionsGymEnv(tool_policy=ToolPolicy.FORBIDDEN)
-        problem = env.reset(seed=42)
+        env.reset(seed=42)
 
         # Try using a tool
         obs, reward, done, info = env.step('CALL simplify {"fraction": "2/4"}')
@@ -262,6 +258,432 @@ class TestFractionsGymEnv:
         actions = env.get_allowed_actions()
 
         assert "ANSWER" in actions[0]
+
+
+class TestFractionsGymEnvTools:
+    """Tests for FractionsGymEnv tool execution."""
+
+    def test_simplify_tool(self):
+        """Test simplify tool."""
+        env = FractionsGymEnv()
+        env.reset(seed=42)
+
+        # Simplify 2/4 should give 1/2
+        result = env._execute_tool("simplify", {"fraction": "4/8"})
+        assert result == "1/2"
+
+    def test_simplify_tool_already_simplified(self):
+        """Test simplify on already reduced fraction."""
+        env = FractionsGymEnv()
+        env.reset(seed=42)
+
+        result = env._execute_tool("simplify", {"fraction": "3/7"})
+        assert result == "3/7"
+
+    def test_simplify_tool_invalid_input(self):
+        """Test simplify with invalid input - falls back to returning input."""
+        env = FractionsGymEnv()
+        env.reset(seed=42)
+
+        # When input doesn't have a "/" it returns the input as-is
+        result = env._execute_tool("simplify", {"fraction": "invalid"})
+        assert result == "invalid"
+
+    def test_simplify_tool_non_numeric(self):
+        """Test simplify with non-numeric fraction parts."""
+        env = FractionsGymEnv()
+        env.reset(seed=42)
+
+        result = env._execute_tool("simplify", {"fraction": "a/b"})
+        assert "Error" in result
+
+    def test_add_tool(self):
+        """Test add tool."""
+        env = FractionsGymEnv()
+        env.reset(seed=42)
+
+        # 1/4 + 1/4 = 1/2
+        result = env._execute_tool("add", {"frac1": "1/4", "frac2": "1/4"})
+        assert result == "1/2"
+
+    def test_add_tool_different_denominators(self):
+        """Test adding fractions with different denominators."""
+        env = FractionsGymEnv()
+        env.reset(seed=42)
+
+        # 1/2 + 1/3 = 5/6
+        result = env._execute_tool("add", {"frac1": "1/2", "frac2": "1/3"})
+        assert result == "5/6"
+
+    def test_add_tool_invalid(self):
+        """Test add with invalid input."""
+        env = FractionsGymEnv()
+        env.reset(seed=42)
+
+        result = env._execute_tool("add", {"frac1": "invalid", "frac2": "1/2"})
+        assert "Error" in result
+
+    def test_subtract_tool(self):
+        """Test subtract tool."""
+        env = FractionsGymEnv()
+        env.reset(seed=42)
+
+        # 3/4 - 1/4 = 1/2
+        result = env._execute_tool("subtract", {"frac1": "3/4", "frac2": "1/4"})
+        assert result == "1/2"
+
+    def test_subtract_tool_invalid(self):
+        """Test subtract with invalid input."""
+        env = FractionsGymEnv()
+        env.reset(seed=42)
+
+        result = env._execute_tool("subtract", {"frac1": "bad", "frac2": "1/2"})
+        assert "Error" in result
+
+    def test_multiply_tool(self):
+        """Test multiply tool."""
+        env = FractionsGymEnv()
+        env.reset(seed=42)
+
+        # 1/2 * 1/3 = 1/6
+        result = env._execute_tool("multiply", {"frac1": "1/2", "frac2": "1/3"})
+        assert result == "1/6"
+
+    def test_multiply_tool_invalid(self):
+        """Test multiply with invalid input."""
+        env = FractionsGymEnv()
+        env.reset(seed=42)
+
+        result = env._execute_tool("multiply", {"frac1": "abc", "frac2": "1/2"})
+        assert "Error" in result
+
+    def test_divide_tool(self):
+        """Test divide tool."""
+        env = FractionsGymEnv()
+        env.reset(seed=42)
+
+        # 1/2 / 1/4 = 2
+        result = env._execute_tool("divide", {"frac1": "1/2", "frac2": "1/4"})
+        assert result == "2/1"
+
+    def test_divide_tool_by_zero(self):
+        """Test divide by zero."""
+        env = FractionsGymEnv()
+        env.reset(seed=42)
+
+        result = env._execute_tool("divide", {"frac1": "1/2", "frac2": "0/1"})
+        assert "Error" in result or "zero" in result.lower()
+
+    def test_divide_tool_invalid(self):
+        """Test divide with invalid input."""
+        env = FractionsGymEnv()
+        env.reset(seed=42)
+
+        result = env._execute_tool("divide", {"frac1": "bad", "frac2": "1/2"})
+        assert "Error" in result
+
+    def test_gcd_tool(self):
+        """Test gcd tool."""
+        env = FractionsGymEnv()
+        env.reset(seed=42)
+
+        result = env._execute_tool("gcd", {"a": 12, "b": 8})
+        assert result == "4"
+
+    def test_lcm_tool(self):
+        """Test lcm tool."""
+        env = FractionsGymEnv()
+        env.reset(seed=42)
+
+        result = env._execute_tool("lcm", {"a": 4, "b": 6})
+        assert result == "12"
+
+    def test_unknown_tool(self):
+        """Test unknown tool."""
+        env = FractionsGymEnv()
+        env.reset(seed=42)
+
+        result = env._execute_tool("unknown_tool", {})
+        assert "Unknown tool" in result
+
+    def test_get_tool_descriptions(self):
+        """Test getting tool descriptions."""
+        env = FractionsGymEnv()
+        descriptions = env.get_tool_descriptions()
+
+        assert "simplify" in descriptions
+        assert "add" in descriptions
+        assert "subtract" in descriptions
+        assert "multiply" in descriptions
+        assert "divide" in descriptions
+        assert "gcd" in descriptions
+        assert "lcm" in descriptions
+
+
+class TestFractionsVerifierAdvanced:
+    """Advanced tests for FractionsVerifier."""
+
+    def _make_problem(self, gold_answer: str, answer_type=None) -> Problem:
+        """Create a test problem with given gold answer."""
+        from chuk_math_gym.schemas.problem import AnswerType
+
+        return Problem(
+            id="test",
+            seed=0,
+            domain=DomainType.FRACTIONS,
+            difficulty=DifficultyLevel.MEDIUM,
+            prompt="Test problem",
+            expression="test",
+            gold_answer=gold_answer,
+            answer_type=answer_type or AnswerType.EXACT,
+        )
+
+    def test_verify_invalid_gold_answer(self):
+        """Test verify with invalid gold answer."""
+        verifier = FractionsVerifier()
+        problem = self._make_problem("invalid_gold")
+
+        result = verifier.verify_final(problem, "1/2")
+        assert not result.correct
+        assert "Invalid gold answer" in result.error_message
+
+    def test_verify_unreduced_required(self):
+        """Test verify when reduced form is required."""
+        from chuk_math_gym.schemas.problem import AnswerType
+
+        verifier = FractionsVerifier(require_reduced=True)
+        problem = self._make_problem("1/2", answer_type=AnswerType.EXPRESSION)
+
+        # 2/4 = 1/2, but not reduced
+        result = verifier.verify_final(problem, "2/4")
+        assert not result.correct
+        assert result.partial_credit == 0.75
+
+    def test_verify_sign_error(self):
+        """Test verify detects sign error."""
+        verifier = FractionsVerifier()
+        problem = self._make_problem("1/2")
+
+        result = verifier.verify_final(problem, "-1/2")
+        assert not result.correct
+        # Check error message mentions sign
+        assert "Sign error" in result.error_message
+
+    def test_verify_wrong_denominator(self):
+        """Test verify detects wrong denominator."""
+        verifier = FractionsVerifier()
+        problem = self._make_problem("2/4")  # unreduced
+
+        # Same numerator (2), different denominator
+        result = verifier.verify_final(problem, "2/3")
+        assert not result.correct
+
+    def test_verify_rounding_error(self):
+        """Test verify detects rounding error."""
+        verifier = FractionsVerifier()
+        problem = self._make_problem("1/3")
+
+        # 0.333 is close to 1/3 (which is ~0.3333...)
+        result = verifier.verify_final(problem, "0.333")
+        # This should still work as fractions are equivalent within tolerance
+        assert result.correct or "close" in result.error_message.lower()
+
+    def test_verify_trace_empty(self):
+        """Test verify_trace with empty trace."""
+        from chuk_math_gym.schemas.trace import Trace
+
+        verifier = FractionsVerifier()
+        problem = self._make_problem("1/2")
+        trace = Trace(problem_id="test", steps=[])
+
+        result = verifier.verify_trace(problem, trace)
+        assert not result.correct
+        assert result.steps_total == 0
+
+    def test_verify_trace_invalid_gold(self):
+        """Test verify_trace with invalid gold answer."""
+        from chuk_math_gym.schemas.trace import Trace, Step, StepOperation
+
+        verifier = FractionsVerifier()
+        problem = self._make_problem("invalid")
+
+        steps = [
+            Step(
+                index=0,
+                operation=StepOperation.EVAL,
+                before_state="test",
+                after_state="0.5",
+                inputs=[],
+                output="x1",
+                output_value=0.5,
+            ),
+        ]
+
+        trace = Trace(
+            problem_id="test",
+            steps=steps,
+            placeholder_map={"x1": 0.5},
+            final_placeholder="x1",
+            final_value=0.5,
+        )
+
+        result = verifier.verify_trace(problem, trace)
+        assert not result.correct
+
+    def test_verify_trace_with_correct_steps(self):
+        """Test verify_trace with correct steps."""
+        from chuk_math_gym.schemas.trace import Trace, Step, StepOperation
+
+        verifier = FractionsVerifier()
+        problem = self._make_problem("1/2")
+
+        steps = [
+            Step(
+                index=0,
+                operation=StepOperation.EVAL,
+                before_state="1/2",
+                after_state="0.5",
+                inputs=[],
+                output="x1",
+                output_value=0.5,
+            ),
+        ]
+
+        trace = Trace(
+            problem_id="test",
+            steps=steps,
+            placeholder_map={"x1": 0.5},
+            final_placeholder="x1",
+            final_value=0.5,
+        )
+
+        result = verifier.verify_trace(problem, trace)
+        assert result.correct
+
+    def test_verify_trace_with_wrong_final(self):
+        """Test verify_trace with wrong final value."""
+        from chuk_math_gym.schemas.trace import Trace, Step, StepOperation
+
+        verifier = FractionsVerifier()
+        problem = self._make_problem("1/2")
+
+        steps = [
+            Step(
+                index=0,
+                operation=StepOperation.EVAL,
+                before_state="1/3",
+                after_state="0.333",
+                inputs=[],
+                output="x1",
+                output_value=0.333,
+            ),
+        ]
+
+        trace = Trace(
+            problem_id="test",
+            steps=steps,
+            placeholder_map={"x1": 0.333},
+            final_placeholder="x1",
+            final_value=0.333,  # Wrong - should be 0.5
+        )
+
+        result = verifier.verify_trace(problem, trace)
+        assert not result.correct
+
+    def test_verify_step_correct(self):
+        """Test verify_step with correct value."""
+        from chuk_math_gym.schemas.trace import Trace, Step, StepOperation
+
+        verifier = FractionsVerifier()
+        problem = self._make_problem("1/2")
+
+        steps = [
+            Step(
+                index=0,
+                operation=StepOperation.EVAL,
+                before_state="1/2",
+                after_state="0.5",
+                inputs=[],
+                output="x1",
+                output_value=0.5,
+            ),
+        ]
+
+        trace = Trace(
+            problem_id="test",
+            steps=steps,
+            placeholder_map={"x1": 0.5},
+            final_placeholder="x1",
+            final_value=0.5,
+        )
+
+        result = verifier.verify_step(problem, trace, 0, 0.5)
+        assert result.correct
+
+    def test_verify_step_incorrect(self):
+        """Test verify_step with incorrect value."""
+        from chuk_math_gym.schemas.trace import Trace, Step, StepOperation
+
+        verifier = FractionsVerifier()
+        problem = self._make_problem("1/2")
+
+        steps = [
+            Step(
+                index=0,
+                operation=StepOperation.EVAL,
+                before_state="1/2",
+                after_state="0.5",
+                inputs=[],
+                output="x1",
+                output_value=0.5,
+            ),
+        ]
+
+        trace = Trace(
+            problem_id="test",
+            steps=steps,
+            placeholder_map={"x1": 0.5},
+            final_placeholder="x1",
+            final_value=0.5,
+        )
+
+        result = verifier.verify_step(problem, trace, 0, 0.75)  # Wrong
+        assert not result.correct
+
+    def test_verify_step_out_of_range(self):
+        """Test verify_step with out of range index."""
+        from chuk_math_gym.schemas.trace import Trace
+
+        verifier = FractionsVerifier()
+        problem = self._make_problem("1/2")
+        trace = Trace(problem_id="test", steps=[])
+
+        result = verifier.verify_step(problem, trace, 5, 0.5)
+        assert not result.correct
+
+    def test_parse_latex_fraction(self):
+        """Test parsing LaTeX fraction format."""
+        verifier = FractionsVerifier()
+        problem = self._make_problem("3/4")
+
+        result = verifier.verify_final(problem, r"\frac{3}{4}")
+        assert result.correct
+
+    def test_parse_negative_mixed_number(self):
+        """Test parsing negative mixed number."""
+        verifier = FractionsVerifier()
+        problem = self._make_problem("-3/2")
+
+        result = verifier.verify_final(problem, "-1 1/2")
+        assert result.correct
+
+    def test_empty_answer(self):
+        """Test with empty answer."""
+        verifier = FractionsVerifier()
+        problem = self._make_problem("1/2")
+
+        result = verifier.verify_final(problem, "")
+        assert not result.correct
 
 
 class TestFractionsIntegration:
