@@ -1,7 +1,7 @@
 import pytest
-from expression_generator.utilities.random_number_generator import generate_random_number
-from expression_generator.utilities.random_operator_generator import generate_random_operator
-from expression_generator.arithmetic_expression_generator import ArithmeticExpressionGenerator
+from chuk_math_gym.expression_generator.utilities.random_number_generator import generate_random_number
+from chuk_math_gym.expression_generator.utilities.random_operator_generator import generate_random_operator
+from chuk_math_gym.expression_generator.arithmetic_expression_generator import ArithmeticExpressionGenerator
 
 def test_generate_random_number_integer():
     result = generate_random_number(1, 10, allow_negative=False, allow_decimals=False)

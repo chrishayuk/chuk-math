@@ -1,4 +1,4 @@
-from compiler.instructions.output_emitters.qa_emitter import emit_qa
+from chuk_math_gym.compiler.instructions.output_emitters.qa_emitter import emit_qa
 
 def test_output_as_qa():
     # instruction

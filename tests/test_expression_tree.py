@@ -1,5 +1,5 @@
-from explanations.expression_node import ExpressionNode
-from explanations.expression_tree import ExpressionTree
+from chuk_math_gym.explanations.expression_node import ExpressionNode
+from chuk_math_gym.explanations.expression_tree import ExpressionTree
 
 def test_print_tree():
     root = ExpressionNode("+", ExpressionNode("3"), ExpressionNode("7"))

@@ -1,10 +1,10 @@
-from compiler.lexer.tokenizer import Tokenizer
-from compiler.parser.parser import Parser
-from compiler.ast.expressions.literal_expression import Literal
-from compiler.ast.expressions.binary_expression import BinaryExpression
-from compiler.ast.expressions.unary_expression import UnaryExpression
-from compiler.lexer.token_type import TokenType
-from compiler.lexer.tokenizer import Token
+from chuk_math_gym.compiler.lexer.tokenizer import Tokenizer
+from chuk_math_gym.compiler.parser.parser import Parser
+from chuk_math_gym.compiler.ast.expressions.literal_expression import Literal
+from chuk_math_gym.compiler.ast.expressions.binary_expression import BinaryExpression
+from chuk_math_gym.compiler.ast.expressions.unary_expression import UnaryExpression
+from chuk_math_gym.compiler.lexer.token_type import TokenType
+from chuk_math_gym.compiler.lexer.tokenizer import Token
 
 # Helper function to generate tokens from an expression string
 def tokenize(expression):

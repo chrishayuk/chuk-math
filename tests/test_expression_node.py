@@ -1,5 +1,5 @@
-from explanations.expression_explanation_generator import ExpressionExplanationGenerator
-from explanations.expression_node import ExpressionNode
+from chuk_math_gym.explanations.expression_explanation_generator import ExpressionExplanationGenerator
+from chuk_math_gym.explanations.expression_node import ExpressionNode
 
 def test_evaluate_simple_number():
     node = ExpressionNode("5")

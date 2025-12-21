@@ -1,8 +1,8 @@
 from decimal import Decimal
 import pytest
-from compiler.lexer.token import Token
-from compiler.parser.arithmetic_expression import ArithmeticExpression
-from compiler.ast.expressions import BinaryExpression, Literal, UnaryExpression
+from chuk_math_gym.compiler.lexer.token import Token
+from chuk_math_gym.compiler.parser.arithmetic_expression import ArithmeticExpression
+from chuk_math_gym.compiler.ast.expressions import BinaryExpression, Literal, UnaryExpression
 import json
 
 def test_basic_expression():
