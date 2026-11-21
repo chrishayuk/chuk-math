@@ -4,7 +4,11 @@ Linear Equations Gym environment.
 Implements the MathGymEnv interface for linear equation problems.
 """
 
-from chuk_math_gym.schemas.problem import Problem, DifficultyLevel, ToolPolicy
+from typing import Any
+
+from chuk_gym_core import DifficultyLevel, ToolPolicy
+
+from chuk_math_gym.schemas.problem import Problem
 from chuk_math_gym.schemas.trace import Trace
 from chuk_math_gym.verifiers.base import Verifier
 from chuk_math_gym.env.base import MathGymEnv
@@ -24,9 +28,9 @@ class LinearEquationsGymEnv(MathGymEnv):
 
     Example:
         env = LinearEquationsGymEnv()
-        problem = env.reset(seed=42, difficulty=DifficultyLevel.MEDIUM)
+        obs, info = await env.reset(seed=42, difficulty=DifficultyLevel.MEDIUM)
 
-        obs, reward, done, info = env.step("ANSWER 5")
+        obs, reward, terminated, truncated, info = await env.step("ANSWER 5")
     """
 
     def __init__(
@@ -34,9 +38,11 @@ class LinearEquationsGymEnv(MathGymEnv):
         tool_policy: ToolPolicy = ToolPolicy.ALLOWED,
         max_steps: int = 10,
         step_penalty: float = -0.01,
-        wrong_answer_penalty: float = -1.0,
+        invalid_penalty: float = -0.1,
+        hint_penalty: float = -0.1,
         correct_reward: float = 1.0,
-        efficiency_bonus: float = 0.1,
+        completion_bonus: float = 1.0,
+        efficiency_multiplier: float = 0.1,
     ):
         """
         Initialize the linear equations environment.
@@ -45,15 +51,22 @@ class LinearEquationsGymEnv(MathGymEnv):
             tool_policy=tool_policy,
             max_steps=max_steps,
             step_penalty=step_penalty,
-            wrong_answer_penalty=wrong_answer_penalty,
+            invalid_penalty=invalid_penalty,
+            hint_penalty=hint_penalty,
             correct_reward=correct_reward,
-            efficiency_bonus=efficiency_bonus,
+            completion_bonus=completion_bonus,
+            efficiency_multiplier=efficiency_multiplier,
         )
 
         self._generator = LinearEquationsGenerator()
-        self._verifier = LinearEquationsVerifier()
+        self._eq_verifier = LinearEquationsVerifier()
 
-    def _generate_problem(
+    @property
+    def domain(self) -> str:
+        """Domain identifier."""
+        return "linear_equations"
+
+    async def _generate_problem(
         self,
         seed: int,
         difficulty: DifficultyLevel,
@@ -66,7 +79,7 @@ class LinearEquationsGymEnv(MathGymEnv):
         )
         return problem
 
-    def _generate_trace(self, problem: Problem) -> Trace:
+    async def _generate_trace(self, problem: Problem) -> Trace | None:
         """Generate the solution trace for a problem."""
         _, trace = self._generator.generate(
             seed=problem.seed,
@@ -77,9 +90,9 @@ class LinearEquationsGymEnv(MathGymEnv):
 
     def _get_verifier(self) -> Verifier:
         """Get the linear equations verifier."""
-        return self._verifier
+        return self._eq_verifier
 
-    def _execute_tool(self, tool_name: str, args: dict) -> str:
+    async def _execute_tool(self, tool_name: str, args: dict[str, Any]) -> str:
         """
         Execute a tool call.
 

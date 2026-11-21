@@ -4,7 +4,11 @@ Fractions Gym environment.
 Implements the MathGymEnv interface for fraction problems.
 """
 
-from chuk_math_gym.schemas.problem import Problem, DifficultyLevel, ToolPolicy
+from typing import Any
+
+from chuk_gym_core import DifficultyLevel, ToolPolicy
+
+from chuk_math_gym.schemas.problem import Problem
 from chuk_math_gym.schemas.trace import Trace
 from chuk_math_gym.verifiers.base import Verifier
 from chuk_math_gym.env.base import MathGymEnv
@@ -23,9 +27,9 @@ class FractionsGymEnv(MathGymEnv):
 
     Example:
         env = FractionsGymEnv()
-        problem = env.reset(seed=42, difficulty=DifficultyLevel.MEDIUM)
+        obs, info = await env.reset(seed=42, difficulty=DifficultyLevel.MEDIUM)
 
-        obs, reward, done, info = env.step("ANSWER 1/2")
+        obs, reward, terminated, truncated, info = await env.step("ANSWER 1/2")
     """
 
     def __init__(
@@ -33,9 +37,11 @@ class FractionsGymEnv(MathGymEnv):
         tool_policy: ToolPolicy = ToolPolicy.ALLOWED,
         max_steps: int = 10,
         step_penalty: float = -0.01,
-        wrong_answer_penalty: float = -1.0,
+        invalid_penalty: float = -0.1,
+        hint_penalty: float = -0.1,
         correct_reward: float = 1.0,
-        efficiency_bonus: float = 0.1,
+        completion_bonus: float = 1.0,
+        efficiency_multiplier: float = 0.1,
         require_reduced: bool = True,
     ):
         """
@@ -45,24 +51,33 @@ class FractionsGymEnv(MathGymEnv):
             tool_policy: Default tool policy
             max_steps: Maximum steps per episode
             step_penalty: Small penalty per step
-            wrong_answer_penalty: Penalty for wrong answer
+            invalid_penalty: Penalty for invalid actions
+            hint_penalty: Penalty for using hints
             correct_reward: Reward for correct answer
-            efficiency_bonus: Bonus for efficient solutions
+            completion_bonus: Bonus for completing problem
+            efficiency_multiplier: Multiplier for efficiency bonus
             require_reduced: Whether answers must be in reduced form
         """
         super().__init__(
             tool_policy=tool_policy,
             max_steps=max_steps,
             step_penalty=step_penalty,
-            wrong_answer_penalty=wrong_answer_penalty,
+            invalid_penalty=invalid_penalty,
+            hint_penalty=hint_penalty,
             correct_reward=correct_reward,
-            efficiency_bonus=efficiency_bonus,
+            completion_bonus=completion_bonus,
+            efficiency_multiplier=efficiency_multiplier,
         )
 
         self._generator = FractionsGenerator()
-        self._verifier = FractionsVerifier(require_reduced=require_reduced)
+        self._frac_verifier = FractionsVerifier(require_reduced=require_reduced)
 
-    def _generate_problem(
+    @property
+    def domain(self) -> str:
+        """Domain identifier."""
+        return "fractions"
+
+    async def _generate_problem(
         self,
         seed: int,
         difficulty: DifficultyLevel,
@@ -75,7 +90,7 @@ class FractionsGymEnv(MathGymEnv):
         )
         return problem
 
-    def _generate_trace(self, problem: Problem) -> Trace:
+    async def _generate_trace(self, problem: Problem) -> Trace | None:
         """Generate the solution trace for a problem."""
         _, trace = self._generator.generate(
             seed=problem.seed,
@@ -86,9 +101,9 @@ class FractionsGymEnv(MathGymEnv):
 
     def _get_verifier(self) -> Verifier:
         """Get the fractions verifier."""
-        return self._verifier
+        return self._frac_verifier
 
-    def _execute_tool(self, tool_name: str, args: dict) -> str:
+    async def _execute_tool(self, tool_name: str, args: dict[str, Any]) -> str:
         """
         Execute a tool call.
 

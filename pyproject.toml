@@ -5,6 +5,7 @@ description = "A verifiable reasoning and tool-use training environment for math
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "chuk-gym-core>=0.1.0",
     "pydantic>=2.0.0",
     "sympy>=1.13.3",
     "langchain-ollama>=0.2.2",
@@ -15,9 +16,12 @@ dependencies = [
     "pyyaml>=6.0",
 ]
 
+# chuk-gym-core now installed from PyPI
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.3.4",
+    "pytest-asyncio>=0.24.0",
     "pytest-cov>=4.0.0",
     "black>=23.0.0",
     "ruff>=0.1.0",

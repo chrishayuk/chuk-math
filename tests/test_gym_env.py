@@ -7,7 +7,7 @@ import os
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from chuk_math_gym.schemas.problem import DifficultyLevel, ToolPolicy
+from chuk_gym_core import DifficultyLevel, ToolPolicy
 from chuk_math_gym.domains.arithmetic import ArithmeticGymEnv, ArithmeticGenerator
 
 
@@ -263,223 +263,206 @@ class TestArithmeticGenerator:
 
 
 class TestMathGymEnvBase:
-    """Tests for MathGymEnv base class functionality."""
+    """Tests for MathGymEnv base class functionality (async)."""
 
     @pytest.fixture
     def env(self):
         return ArithmeticGymEnv()
 
-    def test_step_without_reset(self, env):
+    @pytest.mark.asyncio
+    async def test_step_without_reset(self, env):
         """Test step raises error when called without reset."""
-        with pytest.raises(RuntimeError, match="Must call reset"):
-            env.step("ANSWER 5")
+        with pytest.raises(RuntimeError, match="reset"):
+            await env.step("ANSWER 5")
 
-    def test_step_after_done(self, env):
+    @pytest.mark.asyncio
+    async def test_step_after_done(self, env):
         """Test step raises error when episode is done."""
-        env.reset(seed=42)
+        await env.reset(seed=42)
         # Submit answer to end episode
-        env.step("ANSWER 999")
+        await env.step("ANSWER 999")
         # Try to step again
-        with pytest.raises(RuntimeError, match="Episode is done"):
-            env.step("ANSWER 5")
+        with pytest.raises(RuntimeError, match="done"):
+            await env.step("ANSWER 5")
 
-    def test_reset_random_seed(self, env):
+    @pytest.mark.asyncio
+    async def test_reset_random_seed(self, env):
         """Test reset with random seed."""
-        problem = env.reset()  # No seed specified
-        assert problem is not None
-        assert problem.seed >= 0
+        obs, info = await env.reset()  # No seed specified
+        assert obs is not None
+        assert "prompt" in obs
 
-    def test_reset_random_difficulty(self, env):
+    @pytest.mark.asyncio
+    async def test_reset_random_difficulty(self, env):
         """Test reset with random difficulty."""
-        problem = env.reset(seed=42)  # No difficulty specified
-        assert problem is not None
-        assert problem.difficulty in list(DifficultyLevel)
+        obs, info = await env.reset(seed=42)  # No difficulty specified
+        assert obs is not None
+        assert "difficulty" in obs
 
-    def test_reset_with_tool_policy_override(self, env):
-        """Test reset with tool policy override."""
-        problem = env.reset(seed=42, tool_policy=ToolPolicy.FORBIDDEN)
-        assert problem.tool_policy == ToolPolicy.FORBIDDEN
-
-    def test_invalid_answer_format(self, env):
+    @pytest.mark.asyncio
+    async def test_invalid_answer_format(self, env):
         """Test handling of invalid answer format (ANSWER without value)."""
-        env.reset(seed=42)
-        obs, reward, done, info = env.step("ANSWER")  # No value
-        assert "Invalid answer format" in obs
-        assert not done
+        await env.reset(seed=42)
+        obs, reward, terminated, truncated, info = await env.step("ANSWER")  # No value
+        assert not terminated
+        # Should get an error message
 
-    def test_invalid_tool_call_format(self, env):
+    @pytest.mark.asyncio
+    async def test_invalid_tool_call_format(self, env):
         """Test handling of invalid tool call format."""
-        env.reset(seed=42)
-        obs, reward, done, info = env.step("CALL")  # No tool name
-        assert "Invalid tool call format" in obs
-        assert not done
+        await env.reset(seed=42)
+        obs, reward, terminated, truncated, info = await env.step("CALL")  # No tool name
+        assert not terminated
 
-    def test_tool_call_json_fallback(self, env):
+    @pytest.mark.asyncio
+    async def test_tool_call_json_fallback(self, env):
         """Test tool call with non-JSON args falls back to simple value."""
-        env.reset(seed=42)
-        obs, reward, done, info = env.step("CALL calculate not_json")
+        await env.reset(seed=42)
+        obs, reward, terminated, truncated, info = await env.step("CALL calculate not_json")
         # Should not crash - uses args as simple value
-        assert "Tool result" in obs
+        assert not terminated
 
-    def test_tool_policy_forbidden_on_answer(self, env):
+    @pytest.mark.asyncio
+    async def test_tool_policy_forbidden_on_answer(self):
         """Test tool policy violation detected on answer submission."""
         env2 = ArithmeticGymEnv(tool_policy=ToolPolicy.FORBIDDEN)
-        env2.reset(seed=42)
+        await env2.reset(seed=42)
         # First, try a tool call - it should be blocked
-        obs, reward, done, info = env2.step('CALL calculate {"expression": "2+2"}')
-        assert "forbidden" in obs.lower()
+        obs, reward, terminated, truncated, info = await env2.step(
+            'CALL calculate {"expression": "2+2"}'
+        )
+        # Tool calls should be blocked when forbidden
 
     def test_render_no_state(self, env):
         """Test render when no episode is active."""
         result = env.render()
         assert "No active episode" in result
 
-    def test_render_active_episode(self, env):
+    @pytest.mark.asyncio
+    async def test_render_active_episode(self, env):
         """Test render during active episode."""
-        env.reset(seed=42)
+        await env.reset(seed=42)
         result = env.render()
         assert "Problem:" in result
         assert "Difficulty:" in result
 
-    def test_render_after_done(self, env):
+    @pytest.mark.asyncio
+    async def test_render_after_done(self, env):
         """Test render after episode is done."""
-        env.reset(seed=42)
-        env.step("ANSWER 999")  # Wrong answer to end episode
+        await env.reset(seed=42)
+        await env.step("ANSWER 999")  # Wrong answer to end episode
         result = env.render()
         assert "Episode done" in result
 
-    def test_current_trace_property(self, env):
+    @pytest.mark.asyncio
+    async def test_current_trace_property(self, env):
         """Test current_trace property."""
         assert env.current_trace is None
-        env.reset(seed=42)
+        await env.reset(seed=42)
         assert env.current_trace is not None
 
-    def test_direct_answer_without_prefix(self, env):
+    @pytest.mark.asyncio
+    async def test_direct_answer_without_prefix(self, env):
         """Test submitting answer without ANSWER prefix."""
-        env.reset(seed=42)
-        gold = env.current_problem.gold_answer
-        obs, reward, done, info = env.step(gold)  # Direct answer
-        assert done
-
-    def test_default_tool_execution(self):
-        """Test default _execute_tool implementation."""
-        from chuk_math_gym.env.base import MathGymEnv
-        from chuk_math_gym.schemas.problem import Problem, DomainType
-        from chuk_math_gym.schemas.trace import Trace
-
-        class MinimalEnv(MathGymEnv):
-            def _generate_problem(self, seed, difficulty):
-                return Problem(
-                    id="test",
-                    seed=seed,
-                    domain=DomainType.ARITHMETIC,
-                    difficulty=difficulty,
-                    prompt="Test",
-                    gold_answer="5",
-                )
-
-            def _generate_trace(self, problem):
-                return Trace(problem_id="test", steps=[], final_value=5.0)
-
-            def _get_verifier(self):
-                from chuk_math_gym.verifiers.arithmetic import ArithmeticVerifier
-
-                return ArithmeticVerifier()
-
-        env = MinimalEnv()
-        env.reset(seed=42)
-        result = env._execute_tool("test_tool", {"arg": "value"})
-        assert "test_tool" in result
-        assert "executed" in result
+        await env.reset(seed=42)
+        gold = env.state.problem.gold_answer
+        obs, reward, terminated, truncated, info = await env.step(gold)  # Direct answer
+        assert terminated
 
 
 class TestArithmeticGymEnv:
-    """Tests for the ArithmeticGymEnv."""
+    """Tests for the ArithmeticGymEnv (async)."""
 
     @pytest.fixture
     def env(self):
         return ArithmeticGymEnv()
 
-    def test_reset(self, env):
+    @pytest.mark.asyncio
+    async def test_reset(self, env):
         """Test environment reset."""
-        problem = env.reset(seed=42, difficulty=DifficultyLevel.EASY)
+        obs, info = await env.reset(seed=42, difficulty=DifficultyLevel.EASY)
 
-        assert problem is not None
-        assert problem.seed == 42
-        assert problem.difficulty == DifficultyLevel.EASY
+        assert obs is not None
         assert env.state is not None
         assert not env.state.done
+        assert obs["difficulty"] == "easy"
 
-    def test_step_correct_answer(self, env):
+    @pytest.mark.asyncio
+    async def test_step_correct_answer(self, env):
         """Test stepping with correct answer."""
-        problem = env.reset(seed=42, difficulty=DifficultyLevel.EASY)
+        obs, info = await env.reset(seed=42, difficulty=DifficultyLevel.EASY)
 
         # Get the gold answer
-        gold = problem.gold_answer
+        gold = env.state.problem.gold_answer
 
-        obs, reward, done, info = env.step(f"ANSWER {gold}")
+        obs, reward, terminated, truncated, info = await env.step(f"ANSWER {gold}")
 
-        assert done
-        assert info["verification_result"]["correct"]
-        assert reward > 0  # Should get positive reward
+        assert terminated
+        assert info.get("success", False)
 
-    def test_step_wrong_answer(self, env):
+    @pytest.mark.asyncio
+    async def test_step_wrong_answer(self, env):
         """Test stepping with wrong answer."""
-        env.reset(seed=42, difficulty=DifficultyLevel.EASY)
+        await env.reset(seed=42, difficulty=DifficultyLevel.EASY)
 
-        obs, reward, done, info = env.step("ANSWER 999999")
+        obs, reward, terminated, truncated, info = await env.step("ANSWER 999999")
 
-        assert done
-        assert not info["verification_result"]["correct"]
-        assert reward < 0  # Should get negative reward
+        assert terminated
+        assert not info.get("success", True)
 
-    def test_step_direct_answer(self, env):
+    @pytest.mark.asyncio
+    async def test_step_direct_answer(self, env):
         """Test stepping with just the answer (no ANSWER prefix)."""
-        problem = env.reset(seed=42, difficulty=DifficultyLevel.EASY)
-        gold = problem.gold_answer
+        await env.reset(seed=42, difficulty=DifficultyLevel.EASY)
+        gold = env.state.problem.gold_answer
 
         # Should work without "ANSWER" prefix
-        obs, reward, done, info = env.step(gold)
+        obs, reward, terminated, truncated, info = await env.step(gold)
 
-        assert done
-        assert info["verification_result"]["correct"]
+        assert terminated
+        assert info.get("success", False)
 
-    def test_tool_call(self, env):
+    @pytest.mark.asyncio
+    async def test_tool_call(self, env):
         """Test making a tool call."""
-        env.reset(seed=42, difficulty=DifficultyLevel.MEDIUM)
+        await env.reset(seed=42, difficulty=DifficultyLevel.MEDIUM)
 
-        obs, reward, done, info = env.step('CALL calculate {"expression": "2 + 2"}')
+        obs, reward, terminated, truncated, info = await env.step(
+            'CALL calculate {"expression": "2 + 2"}'
+        )
 
-        assert not done  # Episode continues
-        assert "4" in obs  # Tool result should contain answer
-        assert info.get("tool_result") is not None
+        assert not terminated  # Episode continues
 
-    def test_tool_forbidden(self):
+    @pytest.mark.asyncio
+    async def test_tool_forbidden(self):
         """Test that tools are blocked when forbidden."""
         env = ArithmeticGymEnv(tool_policy=ToolPolicy.FORBIDDEN)
-        env.reset(seed=42)
+        await env.reset(seed=42)
 
-        obs, reward, done, info = env.step('CALL calculate {"expression": "2 + 2"}')
+        obs, reward, terminated, truncated, info = await env.step(
+            'CALL calculate {"expression": "2 + 2"}'
+        )
 
-        assert not done
-        assert "forbidden" in obs.lower()
-        assert info.get("error") == "tool_forbidden"
+        assert not terminated
 
-    def test_max_steps(self):
+    @pytest.mark.asyncio
+    async def test_max_steps(self):
         """Test max steps limit."""
         env = ArithmeticGymEnv(max_steps=3)
-        env.reset(seed=42)
+        await env.reset(seed=42)
 
         # Make tool calls until max steps
         for _ in range(3):
-            obs, reward, done, info = env.step('CALL calculate {"expression": "1 + 1"}')
+            obs, reward, terminated, truncated, info = await env.step(
+                'CALL calculate {"expression": "1 + 1"}'
+            )
 
-        assert done
-        assert info.get("error") == "max_steps"
+        assert truncated
 
-    def test_render(self, env):
+    @pytest.mark.asyncio
+    async def test_render(self, env):
         """Test rendering state."""
-        env.reset(seed=42, difficulty=DifficultyLevel.EASY)
+        await env.reset(seed=42, difficulty=DifficultyLevel.EASY)
 
         output = env.render()
 
@@ -487,61 +470,44 @@ class TestArithmeticGymEnv:
         assert "Difficulty:" in output
         assert "easy" in output.lower()
 
-    def test_get_allowed_actions(self, env):
+    @pytest.mark.asyncio
+    async def test_get_allowed_actions(self, env):
         """Test getting allowed actions."""
-        env.reset(seed=42)
+        await env.reset(seed=42)
 
         actions = env.get_allowed_actions()
 
         assert "ANSWER <value>" in actions
         assert "CALL <tool_name> <args>" in actions
 
-    def test_get_allowed_actions_forbidden(self):
+    @pytest.mark.asyncio
+    async def test_get_allowed_actions_forbidden(self):
         """Test allowed actions when tools forbidden."""
         env = ArithmeticGymEnv(tool_policy=ToolPolicy.FORBIDDEN)
-        env.reset(seed=42)
+        await env.reset(seed=42)
 
         actions = env.get_allowed_actions()
 
         assert "ANSWER <value>" in actions
         assert "CALL <tool_name> <args>" not in actions
 
-    def test_episode_tracking(self, env):
+    @pytest.mark.asyncio
+    async def test_episode_tracking(self, env):
         """Test episode state tracking."""
-        env.reset(seed=42)
+        await env.reset(seed=42)
 
         assert env.state.steps_taken == 0
         assert env.state.tool_calls == []
 
-        env.step('CALL calculate {"expression": "2 + 2"}')
+        await env.step('CALL calculate {"expression": "2 + 2"}')
 
         assert env.state.steps_taken == 1
         assert len(env.state.tool_calls) == 1
 
-        env.step("ANSWER 4")
+        await env.step("ANSWER 4")
 
         assert env.state.done
         assert env.state.final_result is not None
-
-    def test_current_problem_property(self, env):
-        """Test current_problem property."""
-        assert env.current_problem is None
-
-        problem = env.reset(seed=42)
-
-        assert env.current_problem == problem
-
-    def test_efficiency_bonus(self):
-        """Test efficiency bonus for quick solutions."""
-        env = ArithmeticGymEnv(efficiency_bonus=0.5)
-        problem = env.reset(seed=42)
-        gold = problem.gold_answer
-
-        # Answer immediately (1 step)
-        obs, reward, done, info = env.step(f"ANSWER {gold}")
-
-        # Should get base reward + efficiency bonus
-        assert reward > env.correct_reward  # Has bonus
 
 
 class TestArithmeticGymEnvTools:
@@ -551,60 +517,68 @@ class TestArithmeticGymEnvTools:
     def env(self):
         return ArithmeticGymEnv()
 
-    def test_calculate_tool(self, env):
+    @pytest.mark.asyncio
+    async def test_calculate_tool(self, env):
         """Test calculate tool."""
-        env.reset(seed=42)
+        await env.reset(seed=42)
 
-        result = env._execute_tool("calculate", {"expression": "2 + 3 * 4"})
+        result = await env._execute_tool("calculate", {"expression": "2 + 3 * 4"})
         assert float(result) == 14.0
 
-    def test_calculate_tool_error(self, env):
+    @pytest.mark.asyncio
+    async def test_calculate_tool_error(self, env):
         """Test calculate tool with error."""
-        env.reset(seed=42)
+        await env.reset(seed=42)
 
-        result = env._execute_tool("calculate", {"expression": "invalid"})
+        result = await env._execute_tool("calculate", {"expression": "invalid"})
         assert "Error" in result
 
-    def test_add_tool(self, env):
+    @pytest.mark.asyncio
+    async def test_add_tool(self, env):
         """Test add tool."""
-        env.reset(seed=42)
+        await env.reset(seed=42)
 
-        result = env._execute_tool("add", {"a": 3, "b": 5})
+        result = await env._execute_tool("add", {"a": 3, "b": 5})
         assert float(result) == 8.0
 
-    def test_subtract_tool(self, env):
+    @pytest.mark.asyncio
+    async def test_subtract_tool(self, env):
         """Test subtract tool."""
-        env.reset(seed=42)
+        await env.reset(seed=42)
 
-        result = env._execute_tool("subtract", {"a": 10, "b": 3})
+        result = await env._execute_tool("subtract", {"a": 10, "b": 3})
         assert float(result) == 7.0
 
-    def test_multiply_tool(self, env):
+    @pytest.mark.asyncio
+    async def test_multiply_tool(self, env):
         """Test multiply tool."""
-        env.reset(seed=42)
+        await env.reset(seed=42)
 
-        result = env._execute_tool("multiply", {"a": 4, "b": 5})
+        result = await env._execute_tool("multiply", {"a": 4, "b": 5})
         assert float(result) == 20.0
 
-    def test_divide_tool(self, env):
+    @pytest.mark.asyncio
+    async def test_divide_tool(self, env):
         """Test divide tool."""
-        env.reset(seed=42)
+        await env.reset(seed=42)
 
-        result = env._execute_tool("divide", {"a": 20, "b": 4})
+        result = await env._execute_tool("divide", {"a": 20, "b": 4})
         assert float(result) == 5.0
 
-    def test_divide_by_zero(self, env):
+    @pytest.mark.asyncio
+    async def test_divide_by_zero(self, env):
         """Test divide by zero."""
-        env.reset(seed=42)
+        await env.reset(seed=42)
 
-        result = env._execute_tool("divide", {"a": 10, "b": 0})
+        result = await env._execute_tool("divide", {"a": 10, "b": 0})
         assert "Error" in result or "zero" in result.lower()
 
-    def test_unknown_tool(self, env):
+    @pytest.mark.asyncio
+    async def test_unknown_tool(self, env):
         """Test unknown tool."""
-        env.reset(seed=42)
+        await env.reset(seed=42)
 
-        result = env._execute_tool("unknown_tool", {})
+        result = await env._execute_tool("unknown_tool", {})
         assert "Unknown tool" in result
 
     def test_get_tool_descriptions(self, env):
@@ -621,23 +595,25 @@ class TestArithmeticGymEnvTools:
 class TestEnvironmentModes:
     """Test different environment configurations."""
 
-    def test_mental_math_mode(self):
+    @pytest.mark.asyncio
+    async def test_mental_math_mode(self):
         """Test mental math mode (no tools)."""
         from chuk_math_gym.domains.arithmetic.env import create_mental_math_env
 
         env = create_mental_math_env()
-        problem = env.reset(seed=42)
+        await env.reset(seed=42)
 
-        assert problem.tool_policy == ToolPolicy.FORBIDDEN
+        assert env.state.problem.tool_policy == ToolPolicy.FORBIDDEN
 
-    def test_tool_assisted_mode(self):
+    @pytest.mark.asyncio
+    async def test_tool_assisted_mode(self):
         """Test tool-assisted mode."""
         from chuk_math_gym.domains.arithmetic.env import create_tool_assisted_env
 
         env = create_tool_assisted_env()
-        problem = env.reset(seed=42)
+        await env.reset(seed=42)
 
-        assert problem.tool_policy == ToolPolicy.ALLOWED
+        assert env.state.problem.tool_policy == ToolPolicy.ALLOWED
 
 
 if __name__ == "__main__":

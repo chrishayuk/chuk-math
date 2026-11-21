@@ -112,12 +112,27 @@ class Verifier(ABC):
             List of ToolCallGrade for each call
         """
         grades = []
+        from chuk_gym_core import ToolPolicy
+
         for call in tool_calls:
             tool_name = call.get("name", "unknown")
             args = call.get("args", {})
 
-            # Check if tool is allowed
-            if problem.allowed_tools and tool_name not in problem.allowed_tools:
+            # Check tool policy first
+            if problem.tool_policy == ToolPolicy.FORBIDDEN:
+                grades.append(
+                    ToolCallGrade(
+                        tool_name=tool_name,
+                        args=args,
+                        valid=False,
+                        necessary=False,
+                        efficient=False,
+                        penalty=1.0,
+                        error_message="Tool calls are forbidden for this problem",
+                    )
+                )
+            # Check if tool is in allowed list
+            elif problem.allowed_tools and tool_name not in problem.allowed_tools:
                 grades.append(
                     ToolCallGrade(
                         tool_name=tool_name,
@@ -129,20 +144,8 @@ class Verifier(ABC):
                         error_message=f"Tool '{tool_name}' not in allowed list",
                     )
                 )
-            elif problem.forbidden_tools and tool_name in problem.forbidden_tools:
-                grades.append(
-                    ToolCallGrade(
-                        tool_name=tool_name,
-                        args=args,
-                        valid=False,
-                        necessary=False,
-                        efficient=False,
-                        penalty=1.0,
-                        error_message=f"Tool '{tool_name}' is forbidden",
-                    )
-                )
             else:
-                # Basic valid call
+                # Valid tool call
                 grades.append(
                     ToolCallGrade(
                         tool_name=tool_name,
